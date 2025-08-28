@@ -1,0 +1,65 @@
+.sudoku-square {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  padding: 0px;
+  align-items: center;
+  justify-self: center;
+  border: 3px solid transparent;
+}
+
+.sudoku-square-pencil-mode {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  padding: 0px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  align-items: center;
+  justify-self: center;
+  border: 3px solid transparent;
+}
+
+.sudoku-square-tlnotes {
+  font-size: 8px;
+  color: #999;
+  margin: 0;
+}
+
+.top-box-border {
+  border-top: 3px solid #222;
+}
+
+.left-box-border {
+  border-left: 3px solid #222;
+}
+
+.bottom-box-border {
+  border-bottom: 3px solid #222;
+}
+
+.right-box-border {
+  border-right: 3px solid #222;
+}
+
+.selected {
+  border: 3px solid rgb(124, 124, 251);
+  background-color: rgb(221, 221, 253);
+}
+
+.related {
+  background-color: rgb(221, 221, 253);
+}
+
+.same-number {
+  background-color: rgb(196, 196, 255);
+}
+
+.sudoku-square-value {
+  color: #333;
+}
+
+.invalid {
+  color: red;
+}
