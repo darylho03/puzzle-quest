@@ -1,24 +1,129 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import QueensSquare from './QueensSquare';
 
 interface Props {
     regions: number[][];
+    grid: number[][];
 }
 
 const GRID_SIZE = 6;
 
-export default function QueensGrid(props: Props) {
-    const { regions } = props;
-    const [grid, setGrid] = useState<number[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
-    const regionGrid: number[][] = regions || Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
+function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidCells: (cells: {row: number, col: number}[]) => void) {
+    const invalid: {row: number, col: number}[] = [];
+    console.log("Checking invalid cells in function");
+    console.log("Region grid:", regionGrid);
 
+    function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
+        // Check the column & row
+        for (let i = 0; i < GRID_SIZE; i++) {
+            if (i !== row && grid[i][col] === 2) {
+                return true;
+            }
+            if (i !== col && grid[row][i] === 2) {
+                return true;
+            }
+        }
+
+        // Check the adjacent diagonals and regions
+        const region = regionGrid[row][col];
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
+                    return true;
+                }
+                if (!(i === row && j === col) && regionGrid[i][j] === region && grid[i][j] === 2) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            if (grid[row][col] === 2) {
+                // Check for invalid placements
+                if (isInvalidPlacement(row, col, grid, regionGrid)) {
+                    invalid.push({row, col});
+                }
+            }
+        }
+    }
+    setInvalidCells(invalid);
+}
+
+function checkAutoDots(grid: number[][], regionGrid: number[][], setAutoDots: (cells: {row: number, col: number}[]) => void) {
+    const autoDots: {row: number, col: number}[] = [];
+    console.log("Checking auto dots in function");
+    console.log("Region grid:", regionGrid);
+
+    function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
+        // Check the column & row
+        for (let i = 0; i < GRID_SIZE; i++) {
+            if (i !== row && grid[i][col] === 2) {
+                return true;
+            }
+            if (i !== col && grid[row][i] === 2) {
+                return true;
+            }
+        }
+
+        // Check the adjacent diagonals and regions
+        const region = regionGrid[row][col];
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
+                    return true;
+                }
+                if (!(i === row && j === col) && regionGrid[i][j] === region && grid[i][j] === 2) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            if (grid[row][col] !== 2) {
+                // Check for invalid placements
+                if (isInvalidPlacement(row, col, grid, regionGrid)) {
+                    autoDots.push({row, col});
+                }
+            }
+        }
+    }
+    setAutoDots(autoDots);
+}
+
+export default function QueensGrid(props: Props) {
+    const [grid, setGrid] = useState<number[][]>(
+        props.grid
+    );
+    const [regionGrid, setRegionGrid] = useState<number[][]>(
+        props.regions
+    );
+
+    useEffect(() => {
+        setRegionGrid(props.regions);
+    }, [props.regions]);
+
+    useEffect(() => {
+        setGrid(props.grid);
+        setAutoDots(Array<{row: number, col: number}>());
+    }, [props.grid]);
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
     const [draggedCells, setDraggedCells] = useState<{row: number, col: number}[]>([]);
     const dragStarted = useRef(false);
     const [startDragState, setStartDragState] = useState(0);
+    const [invalidCells, setInvalidCells] = useState<{row: number, col: number}[]>([]);
+    const [solved, setSolved] = useState(false);
+    const [autoDots, setAutoDots] = useState<{row: number, col: number}[]>([]);
 
     // Mouse event handlers
     const handleSquareMouseDown = (row: number, col: number) => {
@@ -27,7 +132,7 @@ export default function QueensGrid(props: Props) {
         setIsDragging(true);
         setDraggedCells([{row, col}]);
         dragStarted.current = true;
-        if (currentDragState === 0) {
+        if (currentDragState === 0 && !autoDots.some(c => c.row === row && c.col === col)) {
             setGrid(prevGrid => {
                 const newGrid = prevGrid.map(row => row.slice());
                 newGrid[row][col] = 1;
@@ -73,6 +178,7 @@ export default function QueensGrid(props: Props) {
     };
 
     const handleMouseUp = () => {
+        console.log("Mouse Up")
         setIsDragging(false);
         if (draggedCells.length === 1 && startDragState === 1) {
             setGrid(prevGrid => {
@@ -81,23 +187,18 @@ export default function QueensGrid(props: Props) {
                 return newGrid;
             });
         }
+
+        setGrid(prevGrid => {
+            const newGrid = prevGrid.map(rowArr => rowArr.slice());
+            checkInvalidCells(newGrid, regionGrid, setInvalidCells);
+            checkAutoDots(newGrid, regionGrid, setAutoDots);
+            setSolved(invalidCells.length === 0 && newGrid.flat().filter(v => v === 2).length === GRID_SIZE);
+            return newGrid;
+        });
+
         setDraggedCells([]);
         dragStarted.current = false;
     };
-
-    // // Regular click handler (cycle value)
-    // const handleSquareClick = (row: number, col: number) => {
-    //     const clicked = { row, col };
-    //     const newGrid = grid.map((r, rowIndex) =>
-    //         r.map((cell, colIndex) => {
-    //             if (rowIndex === clicked.row && colIndex === clicked.col) {
-    //                 return (cell + 1) % 3;
-    //             }
-    //             return cell;
-    //         })
-    //     );
-    //     setGrid(newGrid);
-    // };
 
     return (
         <div
@@ -107,7 +208,7 @@ export default function QueensGrid(props: Props) {
                 gridTemplateRows: `repeat(${GRID_SIZE}, 80px)`,
                 gridTemplateColumns: `repeat(${GRID_SIZE}, 80px)`,
                 gap: 2,
-                background: '#000',
+                background: solved ? '#3cff00ff' : '#000',
                 padding: 10,
                 width: GRID_SIZE * 82,
             }}
@@ -118,10 +219,11 @@ export default function QueensGrid(props: Props) {
                 row.map((cell, colIndex) => (
                     <QueensSquare
                         key={`${rowIndex}-${colIndex}`}
-                        value={cell}
+                        value={autoDots.some(c => c.row === rowIndex && c.col === colIndex) ? 1 : cell}
                         region={regionGrid[rowIndex][colIndex]}
                         onMouseDown={() => handleSquareMouseDown(rowIndex, colIndex)}
                         onMouseEnter={() => handleSquareMouseEnter(rowIndex, colIndex)}
+                        invalid={invalidCells.some(c => c.row === rowIndex && c.col === colIndex)}
                     />
                 ))
             )}
