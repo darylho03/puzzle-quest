@@ -7,8 +7,9 @@ interface SudokuSquareProps {
   pencilMode: boolean;
   invalid: boolean;
   related: boolean;
-  sameNumber: boolean;
   borderClass: string;
+  selectedValue?: number | null;
+  locked: boolean;
 }
 
 export default function SudokuSquare({
@@ -20,21 +21,23 @@ export default function SudokuSquare({
   pencilMode,
   invalid,
   related,
-  sameNumber,
   borderClass,
+  selectedValue,
+  locked,
 }: SudokuSquareProps) {
   return (
     <button
-      className={`sudoku-square${!value ? '-pencil-mode' : ''}${isSelected ? ' selected' : ''}${related ? ' related' : ''}${sameNumber ? ' same-number' : ''}${borderClass ? ` ${borderClass}` : ''}`}
+      className={`sudoku-square${!value ? '-pencil-mode' : ''}${isSelected ? ' selected' : ''}${related ? ' related' : ''}${value && selectedValue === value ? ' same-number' : ''}${borderClass ? ` ${borderClass}` : ''}`}
       onClick={onClick}
       style={{
-        width: 40,
-        height: 40,
+        width: 80,
+        height: 80,
         fontSize: 20,
         cursor: 'pointer',
       }}
       tabIndex={0}
       onKeyDown={(e) => {
+        if (locked) return; // Prevent changes if the cell is locked
         if (isSelected && pencilMode && !value) {
           const num = parseInt(e.key, 10);
             if (num >= 1 && num <= 9) {
@@ -67,9 +70,9 @@ export default function SudokuSquare({
       }}
     >
       {!value && tlnotes.map((note) => (
-        <span key={note} className="sudoku-square-tlnotes">{note}</span>
+        <span key={note} className={`sudoku-square-tlnotes${note === selectedValue ? ' same-number' : ''}`}>{note}</span>
       ))}
-      {value && <span className={`sudoku-square-value${invalid ? ' invalid' : ''}`}>{value ?? ''}</span>}
+      {value && <span className={`sudoku-square-value${invalid ? ' invalid' : ''}${locked ? ' locked' : ''}`}>{value ?? ''}</span>}
     </button>
   );
 }

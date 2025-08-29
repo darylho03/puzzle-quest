@@ -3,7 +3,66 @@
 import { useState } from 'react';
 import SudokuGrid from './SudokuGrid';
 
-function generateValidSudoku(): (number | null)[][] {
+function getLockedCells(grid: (number | null)[][]): { row: number; col: number }[] {
+    const locked: { row: number; col: number }[] = [];
+    // Logic to determine locked cells
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            if (grid[row][col] !== null) {
+                locked.push({ row, col });
+            }
+        }
+    }
+    return locked;
+}
+
+function solveSudoku(grid: (number | null)[][]): (number | null)[][] {
+
+    const GRID_SIZE = 9;
+
+    function isValid(grid: (number | null)[][], row: number, col: number, value: number): boolean {
+        // Check row
+        if (grid[row].includes(value)) return false;
+        // Check column
+        if (grid.some(r => r[col] === value)) return false;
+        // Check 3x3 square
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let r = startRow; r < startRow + 3; r++) {
+            for (let c = startCol; c < startCol + 3; c++) {
+                if (grid[r][c] === value) return false;
+            }
+        }
+        return true;
+    }
+
+    function solve(grid: (number | null)[][]): boolean {
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                if (grid[row][col] === 0 || grid[row][col] === null) {
+                    for (let value = 1; value <= 9; value++) {
+                        if (isValid(grid, row, col, value)) {
+                            grid[row][col] = value;
+                            if (solve(grid)) {
+                                return true;
+                            }
+                            grid[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Make a deep copy to avoid mutating the original grid
+    const gridCopy: (number | null)[][] = grid.map(row => row.slice());
+    solve(gridCopy);
+    return gridCopy;
+}
+
+function generateSolvedSudoku(): (number)[][] {
     const GRID_SIZE = 9;
     let grid: number[][] = Array.from({ length: GRID_SIZE }, () =>
         Array(GRID_SIZE).fill(0)
@@ -73,6 +132,23 @@ function generateValidSudoku(): (number | null)[][] {
         return true;
     }
 
+    fillGrid(grid);
+    console.log(grid);
+    return grid;
+}
+function generateValidSudoku(grid: (number)[][]): (number | null)[][] {
+    const GRID_SIZE = 9;
+
+    // Helper to check if grid is full
+    function checkGrid(grid: number[][]): boolean {
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                if (grid[row][col] === 0) return false;
+            }
+        }
+        return true;
+    }
+
     // Solve grid recursively and count solutions
     function solveGrid(grid: number[][], counter: { count: number }): boolean {
         for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
@@ -117,13 +193,10 @@ function generateValidSudoku(): (number | null)[][] {
         return true;
     }
 
-    // Generate a fully solved grid
-    console.log('Filling grid...');
-    fillGrid(grid);
-    console.log('Grid filled. Removing numbers...');
+    console.log('Removing numbers...');
 
     // Remove numbers while ensuring unique solution
-    let attempts = 5;
+    let attempts = 20;
     while (attempts > 0) {
         let row = Math.floor(Math.random() * GRID_SIZE);
         let col = Math.floor(Math.random() * GRID_SIZE);
@@ -162,13 +235,24 @@ export default function Sudoku() {
     const [generatedSudoku, setGeneratedSudoku] = useState<(number | null)[][]>(
         Array.from({ length: 9 }, () => Array(9).fill(null))
     );
+    const [lockedCells, setLockedCells] = useState<{ row: number; col: number }[]>([]);
     // Debug: Log when grid is generated
     function handleGenerateSudoku() {
         console.log('Generate Sudoku button clicked');
-        const sudoku = generateValidSudoku();
+        const solved = generateSolvedSudoku();
+        const sudoku = generateValidSudoku(solved);
         console.log('Generated Sudoku:', sudoku);
         setGeneratedSudoku(sudoku);
+        setLockedCells(getLockedCells(sudoku));
     }
+
+    function handleSolveSudoku() {
+        console.log('Solve Sudoku button clicked');
+        let solved = solveSudoku(generatedSudoku.map(r => r.map(cell => cell === null ? 0 : cell)) as number[][]);
+        setGeneratedSudoku(solved);
+        setLockedCells(getLockedCells(solved));
+    }
+
     return (
         <div className="sudoku">
             <h1>Sudoku</h1>
@@ -178,9 +262,13 @@ export default function Sudoku() {
             <button onClick={handleGenerateSudoku}>
                 Generate Sudoku
             </button>
+            <button onClick={handleSolveSudoku}>
+                Solve Generated Sudoku
+            </button>
             <SudokuGrid
                 pencilMode={pencilMode}
                 generatedSudoku={generatedSudoku}
+                lockedCells={lockedCells}
             />
         </div>
     );

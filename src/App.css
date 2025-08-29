@@ -1,6 +1,6 @@
 .sudoku-square {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 18px;
+  font-size: 40px;
   line-height: 1.5;
   padding: 0px;
   align-items: center;
@@ -10,7 +10,7 @@
 
 .sudoku-square-pencil-mode {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 18px;
+  font-size: 40px;
   line-height: 1.5;
   padding: 0px;
   display: grid;
@@ -21,10 +21,21 @@
   border: 3px solid transparent;
 }
 
+
+.sudoku-square-value {
+  font-size: 40px;
+  color: rgb(69, 69, 255);
+}
+
 .sudoku-square-tlnotes {
-  font-size: 8px;
-  color: #999;
+  font-size: 16px;
+  color: rgb(124, 124, 251);
   margin: 0;
+}
+
+.locked {
+  font-size: 40px;
+  color: #333;
 }
 
 .top-box-border {
@@ -44,8 +55,8 @@
 }
 
 .selected {
-  border: 3px solid rgb(124, 124, 251);
-  background-color: rgb(221, 221, 253);
+  border: 3px solid rgb(99, 99, 253);
+  background-color: rgb(196, 196, 255);
 }
 
 .related {
@@ -53,13 +64,43 @@
 }
 
 .same-number {
-  background-color: rgb(196, 196, 255);
-}
-
-.sudoku-square-value {
-  color: #333;
+  background-color: rgb(162, 162, 255);
 }
 
 .invalid {
   color: red;
+}
+
+.queens-square {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 40px;
+  line-height: 1.5;
+  padding: 0px;
+  align-items: center;
+  justify-self: center;
+  border: 3px solid transparent;
+}
+
+.region-1 {
+  background-color: #ff807d;
+}
+
+.region-2 {
+  background-color: rgb(165, 165, 255);
+}
+
+.region-3 {
+  background-color: rgb(168, 255, 168);
+}
+
+.region-4 {
+  background-color: rgb(255, 255, 147);
+}
+
+.region-5 {
+  background-color: rgb(255, 138, 255);
+}
+
+.region-6 {
+  background-color: rgb(255, 219, 154);
 }

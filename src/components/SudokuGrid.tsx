@@ -8,22 +8,23 @@ const GRID_SIZE = 9;
 interface Props {
   pencilMode: boolean;
   generatedSudoku: (number | null)[][];
+  lockedCells: { row: number; col: number }[];
 }
 
-function checkSameNumber(row: number, col: number, grid: (number | null)[][]): { row: number; col: number }[] {
-  const sameNumber: { row: number; col: number }[] = [];
-  const value = grid[row][col];
-  if (value === null) return sameNumber;
+// function checkSameNumber(row: number, col: number, grid: (number | null)[][]): { row: number; col: number }[] {
+//   const sameNumber: { row: number; col: number }[] = [];
+//   const value = grid[row][col];
+//   if (value === null) return sameNumber;
 
-  for (let i = 0; i < GRID_SIZE; i++) {
-    for (let j = 0; j < GRID_SIZE; j++) {
-      if (i !== row && j !== col && grid[i][j] === value) {
-        sameNumber.push({ row: i, col: j });
-      }
-    }
-  }
-  return sameNumber;
-}
+//   for (let i = 0; i < GRID_SIZE; i++) {
+//     for (let j = 0; j < GRID_SIZE; j++) {
+//       if (i !== row && j !== col && grid[i][j] === value) {
+//         sameNumber.push({ row: i, col: j });
+//       }
+//     }
+//   }
+//   return sameNumber;
+// }
 
 function checkRelated(row: number, col: number): { row: number; col: number }[] {
   const related: { row: number; col: number }[] = [];
@@ -50,14 +51,27 @@ function checkNotes(row: number, col: number, value: number | null, tlnotesgrid:
     return tlnotesgrid;
   }
 
+  // Rows
   for (let i = 0; i < GRID_SIZE; i++) {
     if (i !== row && tlnotesgrid[i][col].includes(value)) {
       tlnotesgrid[i][col] = tlnotesgrid[i][col].filter(n => n !== value);
     }
   }
+  // Columns
   for (let j = 0; j < GRID_SIZE; j++) {
     if (j !== col && tlnotesgrid[row][j].includes(value)) {
       tlnotesgrid[row][j] = tlnotesgrid[row][j].filter(n => n !== value);
+    }
+  }
+
+  // 3x3 Boxes
+  const boxRow = Math.floor(row / 3) * 3;
+  const boxCol = Math.floor(col / 3) * 3;
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (tlnotesgrid[boxRow + i][boxCol + j].includes(value)) {
+        tlnotesgrid[boxRow + i][boxCol + j] = tlnotesgrid[boxRow + i][boxCol + j].filter(n => n !== value);
+      }
     }
   }
   return tlnotesgrid;
@@ -131,7 +145,7 @@ function checkInvalidCells(grid: (number | null)[][]): { row: number; col: numbe
   return uniqueInvalid;
 }
 
-export default function SudokuGrid({ pencilMode, generatedSudoku }: Props) {
+export default function SudokuGrid({ pencilMode, generatedSudoku, lockedCells }: Props) {
   const [grid, setGrid] = useState<(number | null)[][]>(generatedSudoku);
   const [tlnotesgrid, setTlnotesgrid] = useState<number[][][]>(
     Array.from({ length: GRID_SIZE }, () =>
@@ -140,19 +154,29 @@ export default function SudokuGrid({ pencilMode, generatedSudoku }: Props) {
   );
   const [invalidCells, setInvalidCells] = useState<{ row: number; col: number }[]>([]);
   const [relatedCells, setRelatedCells] = useState<{ row: number; col: number }[]>([]);
-  const [sameNumber, setSameNumber] = useState<{ row: number; col: number }[]>([]);
   const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
+  const [solved, setSolved] = useState(false);
 
   // Sync grid state with generatedSudoku prop
   useEffect(() => {
     setGrid(generatedSudoku);
   }, [generatedSudoku]);
 
+  useEffect(() => {
+    setTlnotesgrid(Array.from({ length: GRID_SIZE }, () =>
+      Array.from({ length: GRID_SIZE }, () => [])
+    ));
+  }, [generatedSudoku]);
+
   const handleSquareClick = (row: number, col: number) => {
-    const selected = { row, col };
-    setSelected(selected);
-    setRelatedCells(checkRelated(row, col));
-    setSameNumber(checkSameNumber(row, col, grid));
+    const newSelected = { row, col };
+    if (newSelected.row === selected?.row && newSelected.col === selected?.col) {
+      setSelected(null);
+      setRelatedCells([]);
+    } else {
+      setSelected(newSelected);
+      setRelatedCells(checkRelated(row, col));
+    }
   };
 
   const handleSquareChange = (row: number, col: number, value: number | null, tlnotes: number[] | null) => {
@@ -165,7 +189,7 @@ export default function SudokuGrid({ pencilMode, generatedSudoku }: Props) {
     setGrid(newGrid);
     setTlnotesgrid(checkNotes(row, col, value, newTlnotesgrid));
     setInvalidCells(checkInvalidCells(newGrid));
-    setSameNumber(checkSameNumber(row, col, newGrid));
+    setSolved(newGrid.flat().every(cell => cell !== null) && checkInvalidCells(newGrid).length === 0);
   };
 
   return (
@@ -173,12 +197,12 @@ export default function SudokuGrid({ pencilMode, generatedSudoku }: Props) {
         className="sudoku-grid"
       style={{
         display: 'grid',
-        gridTemplateRows: `repeat(${GRID_SIZE}, 40px)`,
-        gridTemplateColumns: `repeat(${GRID_SIZE}, 40px)`,
+        gridTemplateRows: `repeat(${GRID_SIZE}, 80px)`,
+        gridTemplateColumns: `repeat(${GRID_SIZE}, 80px)`,
         gap: 2,
-        background: '#333',
+        background: solved ? '#3cff00ff' : '#000',
         padding: 10,
-        width: GRID_SIZE * 42,
+        width: GRID_SIZE * 82,
       }}
     >
       {grid.map((row, i) =>
@@ -199,8 +223,9 @@ export default function SudokuGrid({ pencilMode, generatedSudoku }: Props) {
             pencilMode={pencilMode}
             invalid={invalidCells.some(cell => cell.row === i && cell.col === j)}
             related={relatedCells.some(cell => cell.row === i && cell.col === j)}
-            sameNumber={sameNumber.some(cell => cell.row === i && cell.col === j)}
             borderClass={boxBorderClass}
+            selectedValue={selected ? grid[selected.row][selected.col] : null}
+            locked={lockedCells.some(cell => cell.row === i && cell.col === j)}
           />
         );
       })
