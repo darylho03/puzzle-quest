@@ -122,7 +122,7 @@ function generateValidRegions(queens: number[][]): number[][] {
         tries++;
     } while (countNQueensSolutions(n, regionGrid) !== 1 && tries < 100);
     // Optionally, warn if unique solution not found after many tries
-    if (tries >= 100) {
+    if (tries >= 200) {
         console.warn('Could not find a region grid with a unique N-Queens solution after 100 tries.');
     }
     console.log(regionGrid);

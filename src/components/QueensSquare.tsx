@@ -1,5 +1,5 @@
 
-export interface QueensSquareProps {
+interface QueensSquareProps {
     value: number;
     region: number;
     onMouseDown?: () => void;

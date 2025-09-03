@@ -115,6 +115,7 @@ export default function QueensGrid(props: Props) {
     useEffect(() => {
         setGrid(props.grid);
         setAutoDots(Array<{row: number, col: number}>());
+        setSolved(false);
     }, [props.grid]);
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
