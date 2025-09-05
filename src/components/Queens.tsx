@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import QueensGrid from './QueensGrid';
-
-const GRID_SIZE = 6;
 
 function generateValidQueens(n: number): [number, number][] {
     let solution: number[] | null = null;
@@ -49,7 +47,7 @@ function generateValidQueens(n: number): [number, number][] {
     return (solution as number[]).map((col: number, row: number) => [row, col]);
 }
 
-function generateValidRegions(queens: number[][]): number[][] {
+function generateValidRegions(n: number): number[][] {
     // Helper to count N-Queens solutions for a given region grid
     function countNQueensSolutions(n: number, regionGrid: number[][]): number {
         let count = 0;
@@ -115,33 +113,50 @@ function generateValidRegions(queens: number[][]): number[][] {
 
     // Try generating regions until only one N-Queens solution exists
     let regionGrid: number[][];
-    const n = queens.length;
+    let queens: number[][];
     let tries = 0;
+    let found: boolean;
     do {
-        regionGrid = generateRegions(queens);
-        tries++;
-    } while (countNQueensSolutions(n, regionGrid) !== 1 && tries < 100);
-    // Optionally, warn if unique solution not found after many tries
-    if (tries >= 200) {
-        console.warn('Could not find a region grid with a unique N-Queens solution after 100 tries.');
-    }
+        found = true;
+        tries = 0;
+        queens = generateValidQueens(n);
+        do {
+            regionGrid = generateRegions(queens);
+            tries++;
+        } while (countNQueensSolutions(n, regionGrid) !== 1 && tries < 100);
+        // Optionally, warn if unique solution not found after many tries
+        if (tries >= 100) {
+            console.warn('Could not find a region grid with a unique N-Queens solution after 100 tries.');
+            found = false;
+        }
+    } while (!found);
+
     console.log(regionGrid);
     return regionGrid;
 }
 
 export default function Queens() {
-    const [regions, setRegions] = useState<number[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
-    const [grid, setGrid] = useState<number[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
+    const [regions, setRegions] = useState<number[][]>(Array(5).fill(null).map(() => Array(5).fill(0)));
+    const [grid, setGrid] = useState<number[][]>(Array(5).fill(null).map(() => Array(5).fill(0)));
+    const grid_size = useRef<HTMLInputElement>(null);
 
     function handleGenerateValidRegions() {
-        const validRegions = generateValidRegions(generateValidQueens(6));
+        const validRegions = generateValidRegions(parseInt(grid_size.current!.value));
         setRegions(validRegions);
-        setGrid(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
+        setGrid(Array(parseInt(grid_size.current!.value)).fill(null).map(() => Array(parseInt(grid_size.current!.value)).fill(0)));
     }
 
     return (
         <div className="queens">
             <h1>Queens</h1>
+            <input
+                type="number"
+                min={1}
+                defaultValue={5}
+                ref={grid_size}
+                placeholder="Rows"
+                style={{ width: 60 }}
+            />
             <button onClick={handleGenerateValidRegions}>
                 Generate Queens
             </button>

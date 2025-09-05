@@ -93,7 +93,7 @@ function generateSolvedSudoku(): (number)[][] {
             const row = Math.floor(i / GRID_SIZE);
             const col = i % GRID_SIZE;
             if (grid[row][col] === 0) {
-                let numberList = [1,2,3,4,5,6,7,8,9];
+                let numberList = GRID_SIZE ? Array.from({ length: GRID_SIZE }, (_, k) => k + 1) : [];
                 shuffle(numberList);
                 for (const value of numberList) {
                     if (!grid[row].includes(value) &&

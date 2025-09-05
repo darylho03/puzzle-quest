@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 import "../App.css";
+import NavBar from '../components/NavBar';
+import { BrowserRouter } from 'react-router-dom';
+
 
 export const metadata = {
   title: 'Next.js',
@@ -9,7 +12,14 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <BrowserRouter>
+          <div className="app">
+            <NavBar />
+            {children}
+          </div>
+        </BrowserRouter>
+      </body>
     </html>
   );
 }

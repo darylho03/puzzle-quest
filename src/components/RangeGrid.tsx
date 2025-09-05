@@ -50,7 +50,7 @@ function isRangePuzzleSolved(grid: number[][], values: (number | null)[][]): boo
             const [row, col] = queue.shift()!;
             for (const [dr, dc] of [[0,1],[1,0],[0,-1],[-1,0]]) {
                 const nr = row + dr, nc = col + dc;
-                if (nr >= 0 && nr < r && nc >= 0 && nc < c && grid[nr][nc] === 2 && !visited[nr][nc]) {
+                if (nr >= 0 && nr < r && nc >= 0 && nc < c && grid[nr][nc] !== 1 && !visited[nr][nc]) {
                     visited[nr][nc] = true;
                     queue.push([nr, nc]);
                     countWhite++;
@@ -99,6 +99,72 @@ function isRangePuzzleSolved(grid: number[][], values: (number | null)[][]): boo
     return true;
 }
 
+function checkInvalid(grid: number[][], values: (number | null)[][]): {row: number, col: number}[] {
+    const invalid: {row: number, col: number}[] = [];
+    const r = grid.length;
+    const c = grid[0]?.length || 0;
+    for (let i = 0; i < r; i++) {
+        for (let j = 0; j < c; j++) {
+            if (grid[i][j] === 1) {
+                for (const [dr, dc] of [[0,1],[1,0],[0,-1],[-1,0]]) {
+                    const ni = i + dr, nj = j + dc;
+                    if (ni >= 0 && ni < r && nj >= 0 && nj < c && grid[ni][nj] === 1) {
+                        invalid.push({row: i, col: j});
+                    }
+                }
+            } else if (grid[i][j] === 2 && values[i][j]) {
+                let count_total = 1;
+                let count_white = 1;
+                let consec_white = true;
+                for (let x = i - 1; x >= 0; x--) {
+                    if (grid[x][j] === 1) break;
+                    count_total++;
+                    if (grid[x][j] === 2 && consec_white) {
+                        count_white++;
+                    } else {
+                        consec_white = false;
+                    }
+                }
+                consec_white = true;
+                for (let x = i + 1; x < r; x++) {
+                    if (grid[x][j] === 1) break;
+                    count_total++;
+                    if (grid[x][j] === 2 && consec_white) {
+                        count_white++;
+                    } else {
+                        consec_white = false;
+                    }
+                }
+                consec_white = true;
+                for (let y = j - 1; y >= 0; y--) {
+                    if (grid[i][y] === 1) break;
+                    count_total++;
+                    if (grid[i][y] === 2 && consec_white) {
+                        count_white++;
+                    } else {
+                        consec_white = false;
+                    }
+                }
+                consec_white = true;
+                for (let y = j + 1; y < c; y++) {
+                    if (grid[i][y] === 1) break;
+                    count_total++;
+                    if (grid[i][y] === 2 && consec_white) {
+                        count_white++;
+                    } else {
+                        consec_white = false;
+                    }
+                }
+                if (values[i][j] !== null && (count_white > values[i][j]! || count_total < values[i][j]!)) {
+                    invalid.push({row: i, col: j});
+                }
+
+            }
+        }
+    }
+    return invalid;
+}
+
 export default function RangeGrid(props: Props) {
     const [grid, setGrid] = useState<number[][]>(
         props.grid
@@ -109,6 +175,7 @@ export default function RangeGrid(props: Props) {
     const [locked, setLocked] = useState<boolean[][]>(
         props.locked
     );
+    const [invalid, setInvalid] = useState<{row: number, col: number}[]>(checkInvalid(props.grid, props.values));
     const [solved, setSolved] = useState<boolean>(false);
 
     const handleSquareClick = (row: number, col: number, reverse: boolean) => {
@@ -116,6 +183,7 @@ export default function RangeGrid(props: Props) {
         const newGrid = [...grid];
         newGrid[row][col] = (reverse ? (newGrid[row][col] + 3 - 1) % 3 : (newGrid[row][col] + 1) % 3);
         setGrid(newGrid);
+        setInvalid(checkInvalid(newGrid, values));
         setSolved(isRangePuzzleSolved(newGrid, values));
     };
 
@@ -145,6 +213,7 @@ export default function RangeGrid(props: Props) {
                         key={`${rowIndex}-${colIndex}`} 
                         value={values[rowIndex][colIndex] ? values[rowIndex][colIndex] : null}
                         square={square}
+                        invalid={invalid.some(c => c.row === rowIndex && c.col === colIndex)}
                         onClick={() => handleSquareClick(rowIndex, colIndex, false)}
                         onRightClick={() => handleSquareClick(rowIndex, colIndex, true)}
                     />

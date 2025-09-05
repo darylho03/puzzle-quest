@@ -33,7 +33,7 @@ export default function SudokuSquare({
         width: 80,
         height: 80,
         fontSize: 20,
-        cursor: 'pointer',
+        cursor: locked ? 'default' : 'pointer',
       }}
       tabIndex={0}
       onKeyDown={(e) => {

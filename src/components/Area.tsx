@@ -127,13 +127,57 @@ function generateAreaPuzzle(r: number, c: number): number[][] {
     for (let i = 0; i < r; i++) {
         for (let j = 0; j < c; j++) {
             if (grid[i][j] === 1) {
-                values[i][j] = 1;
+                values[i][j] = -1;
             } else {
                 values[i][j] = 0;
             }
         }
+        // console.log(`Row ${i} values: ${values[i]}`);
+        console.log(`Row ${i} grid: ${grid[i]}`);
     }
 
+
+    function dfs(row: number, col: number, area: Set<string>, visited: Set<string>) {
+        const key = `${row},${col}`;
+        if (visited.has(key)) return;
+        area.add(key);
+        visited.add(key);
+        for (const [dr, dc] of [[0,1],[1,0],[0,-1],[-1,0]]) {
+            const nr = row + dr, nc = col + dc;
+            if (nr < 0 || nr >= grid.length || nc < 0 || nc >= grid[0].length) continue;
+            if (grid[nr][nc] !== 1) {
+                dfs(nr, nc, area, visited);
+            }
+        }
+    }
+
+    visited = new Set<string>();
+
+    for (let i = 0; i < r; i++) {
+        for (let j = 0; j < c; j++) {
+            const key = `${i},${j}`;
+            if (visited.has(key)) continue;
+            if (grid[i][j] !== 1) {
+                let area: Set<string> = new Set();
+                dfs(i, j, area, visited);
+                // Select random cell from area
+                console.log(area);
+                const randomCell = Array.from(area)[Math.floor(Math.random() * area.size)];
+                console.log(`Selected random cell from area: ${randomCell}`);
+                const [rr, cc] = randomCell.split(',').map(Number);
+                values[rr][cc] = area.size;
+            }
+        }
+    }
+
+    for (let i = 0; i < r; i++) {
+        for (let j = 0; j < c; j++) {
+            if (grid[i][j] === 1) {
+                values[i][j] = 0;
+            }
+        }
+    }
+    console.log(`Final values: ${JSON.stringify(values)}`);
     return values;
 }
 

@@ -8,16 +8,12 @@ interface Props {
     grid: number[][];
 }
 
-const GRID_SIZE = 6;
-
 function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidCells: (cells: {row: number, col: number}[]) => void) {
     const invalid: {row: number, col: number}[] = [];
-    console.log("Checking invalid cells in function");
-    console.log("Region grid:", regionGrid);
 
     function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
         // Check the column & row
-        for (let i = 0; i < GRID_SIZE; i++) {
+        for (let i = 0; i < grid.length; i++) {
             if (i !== row && grid[i][col] === 2) {
                 return true;
             }
@@ -28,8 +24,8 @@ function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidC
 
         // Check the adjacent diagonals and regions
         const region = regionGrid[row][col];
-        for (let i = 0; i < GRID_SIZE; i++) {
-            for (let j = 0; j < GRID_SIZE; j++) {
+        for (let i = 0; i < grid.length; i++) {
+            for (let j = 0; j < grid.length; j++) {
                 if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
                     return true;
                 }
@@ -42,8 +38,8 @@ function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidC
         return false;
     }
 
-    for (let row = 0; row < GRID_SIZE; row++) {
-        for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row < grid.length; row++) {
+        for (let col = 0; col < grid.length; col++) {
             if (grid[row][col] === 2) {
                 // Check for invalid placements
                 if (isInvalidPlacement(row, col, grid, regionGrid)) {
@@ -57,12 +53,10 @@ function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidC
 
 function checkAutoDots(grid: number[][], regionGrid: number[][], setAutoDots: (cells: {row: number, col: number}[]) => void) {
     const autoDots: {row: number, col: number}[] = [];
-    console.log("Checking auto dots in function");
-    console.log("Region grid:", regionGrid);
 
     function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
         // Check the column & row
-        for (let i = 0; i < GRID_SIZE; i++) {
+        for (let i = 0; i < grid.length; i++) {
             if (i !== row && grid[i][col] === 2) {
                 return true;
             }
@@ -73,8 +67,8 @@ function checkAutoDots(grid: number[][], regionGrid: number[][], setAutoDots: (c
 
         // Check the adjacent diagonals and regions
         const region = regionGrid[row][col];
-        for (let i = 0; i < GRID_SIZE; i++) {
-            for (let j = 0; j < GRID_SIZE; j++) {
+        for (let i = 0; i <  grid.length; i++) {
+            for (let j = 0; j <  grid.length; j++) {
                 if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
                     return true;
                 }
@@ -87,8 +81,8 @@ function checkAutoDots(grid: number[][], regionGrid: number[][], setAutoDots: (c
         return false;
     }
 
-    for (let row = 0; row < GRID_SIZE; row++) {
-        for (let col = 0; col < GRID_SIZE; col++) {
+    for (let row = 0; row <  grid.length; row++) {
+        for (let col = 0; col <  grid.length; col++) {
             if (grid[row][col] !== 2) {
                 // Check for invalid placements
                 if (isInvalidPlacement(row, col, grid, regionGrid)) {
@@ -179,7 +173,6 @@ export default function QueensGrid(props: Props) {
     };
 
     const handleMouseUp = () => {
-        console.log("Mouse Up")
         setIsDragging(false);
         if (draggedCells.length === 1 && startDragState === 1) {
             setGrid(prevGrid => {
@@ -193,7 +186,7 @@ export default function QueensGrid(props: Props) {
             const newGrid = prevGrid.map(rowArr => rowArr.slice());
             checkInvalidCells(newGrid, regionGrid, setInvalidCells);
             checkAutoDots(newGrid, regionGrid, setAutoDots);
-            setSolved(invalidCells.length === 0 && newGrid.flat().filter(v => v === 2).length === GRID_SIZE);
+            setSolved(invalidCells.length === 0 && newGrid.flat().filter(v => v === 2).length ===  grid.length);
             return newGrid;
         });
 
@@ -206,12 +199,12 @@ export default function QueensGrid(props: Props) {
             className="queens-grid"
             style={{
                 display: 'grid',
-                gridTemplateRows: `repeat(${GRID_SIZE}, 80px)`,
-                gridTemplateColumns: `repeat(${GRID_SIZE}, 80px)`,
+                gridTemplateRows: `repeat(${ grid.length}, 80px)`,
+                gridTemplateColumns: `repeat(${ grid.length}, 80px)`,
                 gap: 2,
                 background: solved ? '#3cff00ff' : '#000',
                 padding: 10,
-                width: GRID_SIZE * 82,
+                width: grid.length * 82,
             }}
             onMouseUp={handleMouseUp}
             onMouseLeave={() => setIsDragging(false)}

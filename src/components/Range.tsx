@@ -10,7 +10,7 @@ function generateRangePuzzle(r: number, c: number): number[][] {
 
     // Step 2: Randomly place black cells
     function canPlaceBlack(row: number, col: number): boolean {
-    console.log('canPlaceBlack called', row, col);
+        console.log('canPlaceBlack called', row, col);
         if (grid[row][col] !== 2) return false;
         for (const [dr, dc] of [[0,1],[1,0],[0,-1],[-1,0]]) {
             const nr = row + dr, nc = col + dc;
