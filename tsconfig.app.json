@@ -10,15 +10,8 @@
     ],
     "module": "Node16",
     "skipLibCheck": true,
-    "types": [
-      "vite/client",
-      "@vitejs/plugin-react"
-    ],
-    /* Bundler mode */
-    "moduleResolution": "node16",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
+    "types": [],
+    "moduleResolution": "Node16",
     "noEmit": true,
     "jsx": "react-jsx",
     /* Linting */
