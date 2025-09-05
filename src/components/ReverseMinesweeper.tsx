@@ -13,7 +13,7 @@ export default function ReverseMinesweeper() {
     const [values, setValues] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
 
     function handleOnClick(id: number) {
-        const puzzle = puzzles.find((p: any) => p.id === id);
+        const puzzle = puzzles.find((p: { id: number }) => p.id === id);
         if (!puzzle) return <div>Project not found</div>;
         ROW = puzzle.walls.length;
         COL = puzzle.walls[0].length;
@@ -43,7 +43,7 @@ export default function ReverseMinesweeper() {
                 style={{ marginBottom: 16 }}
             >
                 <option value="" disabled>Select a level</option>
-                {puzzles.map((p: any) => (
+                {puzzles.map((p: { id: number }) => (
                     <option key={p.id} value={p.id}>Puzzle {p.id}</option>
                 ))}
             </select>
