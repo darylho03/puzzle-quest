@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "types": [
+      "vite/client"
+    ],
     "target": "ES2017",
     "lib": [
       "dom",
@@ -11,9 +14,9 @@
     "strict": false,
     "noEmit": true,
     "incremental": true,
-    "module": "esnext",
+    "module": "ESNext",
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
