@@ -43,6 +43,9 @@
   top: 100%;
   left: 0;
   display: grid;
+  grid-auto-flow: row;
+  /* 3 rows per column */
+  /* Change 3 to your desired number of rows */
   justify-content: center;
   align-items: center;
   background: #fff;
@@ -148,11 +151,11 @@
 .queens-square {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 40px;
-  line-height: 1.5;
-  padding: 0px;
+  width: 80px;
+  height: 80px;
   align-items: center;
   justify-self: center;
-  border: 3px solid transparent;
+  border: 1px solid #000;
 }
 
 .region-1 {
@@ -233,6 +236,15 @@
   color: green;
 }
 
+.range-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border: 1px solid #000;
+}
+
 .range-color-0 {
   background-color: #BDBDBD;
 }
@@ -305,6 +317,5 @@ body {
 }
 
 .range-invalid {
-  box-sizing: border-box;
-  border: 2px solid red;
+  border: 1px solid red;
 }

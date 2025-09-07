@@ -120,7 +120,7 @@ function generateRangePuzzle(r: number, c: number): number[][] {
     }
     // Step 4: Remove clues while ensuring uniqueness
     function solveRangePuzzle(puzzle: number[][]): number {
-    console.log('solveRangePuzzle called');
+        console.log('solveRangePuzzle called');
         // Brute-force solver: counts number of valid black/white arrangements
         // that match the clues and rules
         let count = 0;

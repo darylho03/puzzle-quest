@@ -21,6 +21,8 @@ const PUZZLE_TABS = [
     dropdown: [
       { label: 'Range (Kuromasu)', to: '/range', img: '/range.png', hover_img: '/range-solved.png' },
       { label: 'Area (Nurikabe)', to: '/area', img: '/area.png', hover_img: '/area-solved.png' },
+      { label: 'Yin-Yang', to: '/yin-yang', img: '/yin-yang.png', hover_img: '/yin-yang-solved.png' },
+    
     ],
   },
   {
@@ -35,7 +37,10 @@ export default function NavBar() {
   const [openTab, setOpenTab] = useState<number | null>(null);
 
   const handleTabClick = (idx: number) => {
-    setOpenTab(openTab === idx ? null : idx);
+    // console.log('Clicked tab', idx);
+    const newOpenTab = openTab === idx ? null : idx;
+    setOpenTab(newOpenTab);
+    // console.log('Open tab is now', newOpenTab);
   };
 
   return (
@@ -44,16 +49,27 @@ export default function NavBar() {
         {PUZZLE_TABS.map((tab, idx) => (
           <li className="navbar-tab" key={tab.label}>
             <button
-              className={`navbar-tab-btn${openTab === idx ? ' active' : ''}`}
+              className={`navbar-tab-btn${openTab !== null && openTab === idx ? ' active' : ''}`}
               onClick={() => handleTabClick(idx)}
               aria-expanded={openTab === idx}
             >
               {tab.label}
             </button>
             {openTab === idx && (
-              <ul className="navbar-dropdown">
+              <ul className="navbar-dropdown"
+                style={{
+                    gridTemplateColumns: `repeat(${Math.floor(tab.dropdown.length / 2)}, 1fr)`,
+                }}
+              >
                 {tab.dropdown.map((item) => (
-                  <Card key={item.label} title={item.label} image={item.img} hover_image={item.hover_img} link={item.to} />
+                  <Card
+                    key={item.label}
+                    title={item.label}
+                    image={item.img}
+                    hover_image={item.hover_img}
+                    link={item.to}
+                    onClick={() => handleTabClick(null)}
+                  />
                 ))}
               </ul>
             )}

@@ -17,6 +17,7 @@ export default function AreaSquare(props: Props) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                border: '1px solid #000',
                 cursor: 'pointer'
             }}
             onClick={onClick}

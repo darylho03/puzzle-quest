@@ -8,6 +8,7 @@ interface Props {
     image: string;
     hover_image: string;
     link: string;
+    onClick: () => void;
 }
 
 export default function Card(props: Props) {
@@ -22,7 +23,7 @@ export default function Card(props: Props) {
     }
 
     return (
-        <Link className="card" href={props.link} onMouseEnter={handleHoverOver} onMouseLeave={handleHoverOff}>
+        <Link className="card" href={props.link} onMouseEnter={handleHoverOver} onMouseLeave={handleHoverOff} onClick={props.onClick}>
             <h3 className="card-title">{props.title}</h3>
             <img className="card-image" src={isHovered ? props.hover_image : props.image} alt={props.title} />
         </Link>
