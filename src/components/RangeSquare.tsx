@@ -10,7 +10,7 @@ export default function RangeSquare(props: Props) {
     const { value, onClick, onRightClick } = props;
     return (
         <div
-            className={`range-square range-color-${props.square}${props.invalid ? ' range-invalid' : ''}`}
+            className={`square range-square range-color-${props.square}${props.invalid ? ' range-invalid' : ''}`}
             style={{
                 width: 80,
                 height: 80,

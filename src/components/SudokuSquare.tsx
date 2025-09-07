@@ -27,7 +27,7 @@ export default function SudokuSquare({
 }: SudokuSquareProps) {
   return (
     <button
-      className={`sudoku-square${!value ? '-pencil-mode' : ''}${isSelected ? ' selected' : ''}${related ? ' related' : ''}${value && selectedValue === value ? ' same-number' : ''}${borderClass ? ` ${borderClass}` : ''}`}
+      className={`square sudoku-square${!value ? '-pencil-mode' : ''}${isSelected ? ' selected' : ''}${related ? ' related' : ''}${value && selectedValue === value ? ' same-number' : ''}${borderClass ? ` ${borderClass}` : ''}`}
       onClick={onClick}
       style={{
         width: 80,

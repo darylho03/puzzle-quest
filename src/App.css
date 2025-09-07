@@ -1,12 +1,13 @@
 /* NavBar styles */
 .navbar {
-  position: fixed;
   top: 0;
   width: 100%;
+  position: fixed;
   margin: 0;
   padding: 0.5rem 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  z-index: 3;
+  z-index: 1000;
+  background-color: #FFF;
 }
 
 .navbar-tabs {
@@ -73,6 +74,13 @@
 .navbar-link:hover {
   background: #eee;
   color: #0077ff;
+}
+
+.description {
+  padding: 1rem 2rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
 }
 
 .sudoku-square {
@@ -158,6 +166,10 @@
   border: 1px solid #000;
 }
 
+.region-0 {
+  background-color: #BDBDBD;
+}
+
 .region-1 {
   background-color: #ff807d;
 }
@@ -209,31 +221,31 @@
 }
 
 .block-value-1 {
-  background-color: #0000FF;
+  background-color: rgb(165, 165, 255);
 }
 
 .block-value-2 {
-  background-color: #027B01;
+  background-color: rgb(168, 255, 168);
 }
 
 .block-value-3 {
-  background-color: #FF0302;
+  background-color: #ff807d;
 }
 
 .block-value-4 {
-  background-color: #00007B;
+  background-color: rgb(123, 123, 179);
 }
 
 .wall-0 {
-  background-color: #FFF;
+  background-color: #BDBDBD;
 }
 
 .wall-1 {
-  background-color: #888;
+  background-color: #666;
 }
 
 .correct {
-  color: green;
+  color: rgb(60, 255, 0);
 }
 
 .range-square {
@@ -317,5 +329,11 @@ body {
 }
 
 .range-invalid {
-  border: 1px solid red;
+  border: 3px solid red;
+}
+
+.square {
+  outline: 1px solid #000;
+  box-sizing: border-box;
+  user-select: none;
 }

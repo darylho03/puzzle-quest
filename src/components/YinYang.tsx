@@ -298,8 +298,8 @@ function generateYinYangPuzzle(r: number, c: number): number[][] {
 export default function YinYang() {
     const rowRef = useRef<HTMLInputElement>(null);
     const colRef = useRef<HTMLInputElement>(null);
-    const [grid, setGrid] = useState<number[][]>(Array.from({ length: 9 }, () => Array(9).fill(0)));
-    const [locked, setLocked] = useState<boolean[][]>(Array.from({ length: 9 }, () => Array(9).fill(false)));
+    const [grid, setGrid] = useState<number[][]>(Array.from({ length: 5 }, () => Array(5).fill(0)));
+    const [locked, setLocked] = useState<boolean[][]>(grid.map(row => row.map(value => value !== 0 ? true : false)));
 
     const handleGenerate = () => {
         const numRows = Math.max(1, parseInt(rowRef.current?.value || '5', 10));
@@ -307,6 +307,7 @@ export default function YinYang() {
         const newGrid = generateYinYangPuzzle(numRows, numCols);
         console.log(newGrid);
         setGrid(newGrid);
+        setLocked(newGrid.map(row => row.map(value => value !== 0 ? true : false)));
     };
 
     return (

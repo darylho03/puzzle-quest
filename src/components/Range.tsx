@@ -259,7 +259,7 @@ function generateRangePuzzle(r: number, c: number): number[][] {
 export default function Range() {
     const rowRef = useRef<HTMLInputElement>(null);
     const colRef = useRef<HTMLInputElement>(null);
-    const [values, setValues] = useState<number[][]>([[0]]);
+    const [values, setValues] = useState<number[][]>(Array(5).fill(null).map(() => Array(5).fill(0)));
     const [grid, setGrid] = useState<number[][]>(values.map(row => row.map(value => value ? 2 : 0)));
     const [locked, setLocked] = useState<boolean[][]>(values.map(row => row.map(value => value ? true : false)));
 

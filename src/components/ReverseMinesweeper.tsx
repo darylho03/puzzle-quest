@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ReverseMinesweeperGrid from './ReverseMinesweeperGrid';
 import puzzles from '../data/puzzles.json'
-const GRID_SIZE = 10;
+const GRID_SIZE = 5;
 let ROW = 10;
 let COL = 10;
 

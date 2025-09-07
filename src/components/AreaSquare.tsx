@@ -9,7 +9,7 @@ export default function AreaSquare(props: Props) {
     const { value, square, onClick, onRightClick } = props;
     return (
         <div
-            className={`area-square area-color-${square}`}
+            className={`square area-square area-color-${square}`}
             style={{
                 width: 80,
                 height: 80,

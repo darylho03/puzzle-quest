@@ -8,7 +8,7 @@ interface Props {
 export default function YinYangSquare(props: Props) {
     const { value, locked, onClick, onRightClick } = props;
     return (
-        <div
+        <div className={`square yin-yang-square${locked ? ' locked' : ''}`}
             onClick={onClick}
             onContextMenu={(e) => {
                 e.preventDefault();
@@ -33,7 +33,9 @@ export default function YinYangSquare(props: Props) {
                 justifyContent: 'center',
                 background: value === 1 ? '#000' : value === 2 ? '#fff' : 'transparent',
                 borderRadius: '100%'
-            }}></div>
+            }}>
+                {locked && <span style={{ backgroundColor: '#BDBDBD', width: '10%', height: '10%', borderRadius: '100%' }}></span>}
+            </div>
         </div>
     );
 }

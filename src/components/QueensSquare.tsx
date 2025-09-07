@@ -11,7 +11,7 @@ export default function QueensSquare(props: QueensSquareProps) {
     const { value, region, onMouseDown, onMouseEnter, invalid } = props;
     return (
         <div 
-            className={`queens-square region-${region}`} 
+            className={`square queens-square region-${region}`} 
             onMouseDown={onMouseDown}
             onMouseEnter={onMouseEnter}
             style={{
