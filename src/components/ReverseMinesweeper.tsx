@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ReverseMinesweeperGrid from './ReverseMinesweeperGrid';
 import puzzles from '../data/puzzles.json'
+import puzzle_order from '../data/reverse_minesweeper_puzzle_order.json'
 const GRID_SIZE = 5;
 let ROW = 10;
 let COL = 10;
@@ -12,19 +13,27 @@ export default function ReverseMinesweeper() {
     const [blocks, setBlocks] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
     const [values, setValues] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
 
-    function handleOnClick(id: number) {
-        const puzzle = puzzles.find((p: { id: number }) => p.id === id);
+    function handleOnClick(name: string) {
+        const puzzle = puzzles.find((p) => p.name !== undefined && p.name === name);
         if (!puzzle) return <div>Project not found</div>;
         ROW = puzzle.walls.length;
         COL = puzzle.walls[0].length;
         const newWalls: number[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
         const newBlocks: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
         const newValues: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
+
+        const negativeMap = {
+            '!': -1,
+            '@': -2,
+            '#': -3,
+            '$': -4,
+            '%': -5
+        }
         for (let i = 0; i < puzzle.walls.length; i++) {
             for (let j = 0; j < puzzle.walls[0].length; j++) {
                 newWalls[i][j] = puzzle.walls[i][j] === " " ? 0 : 1;
-                newBlocks[i][j] = puzzle.blocks[i][j] === " " ? null : Number(puzzle.blocks[i][j]);
-                newValues[i][j] = puzzle.values[i][j] === " " ? null : Number(puzzle.values[i][j]);
+                newBlocks[i][j] = puzzle.blocks[i][j] === " " ? null : (negativeMap[puzzle.blocks[i][j]] !== undefined ? negativeMap[puzzle.blocks[i][j]] : Number(puzzle.blocks[i][j]));
+                newValues[i][j] = puzzle.values[i][j] === " " ? null : (negativeMap[puzzle.values[i][j]] !== undefined ? negativeMap[puzzle.values[i][j]] : Number(puzzle.values[i][j]));
             }
         }
         setWalls(newWalls);
@@ -38,13 +47,15 @@ export default function ReverseMinesweeper() {
             <label htmlFor="level-select">Select Puzzle Level: </label>
             <select
                 id="level-select"
-                onChange={e => handleOnClick(Number(e.target.value))}
+                onChange={e => handleOnClick(e.target.value)}
                 defaultValue={""}
                 style={{ marginBottom: 16 }}
             >
                 <option value="" disabled>Select a level</option>
-                {puzzles.map((p: { id: number }) => (
-                    <option key={p.id} value={p.id}>Puzzle {p.id}</option>
+                {puzzle_order.puzzles.map((p: { id: string, name: string }) => (
+                    <option key={p.id} value={p.name}>
+                        {`${p.id}: ${p.name}`}
+                    </option>
                 ))}
             </select>
             <ReverseMinesweeperGrid 

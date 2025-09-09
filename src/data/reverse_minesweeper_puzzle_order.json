@@ -1,0 +1,88 @@
+{
+    "puzzles": [
+        {
+            "id": "1-1",
+            "name": "Introduction"
+        },
+        {
+            "id": "1-2",
+            "name": "Pattern"
+        },
+        {
+            "id": "1-3",
+            "name": "Lovers"
+        },
+        {
+            "id": "1-4",
+            "name": "Haters"
+        },
+        {
+            "id": "1-5",
+            "name": "Circle"
+        },
+        {
+            "id": "1-6",
+            "name": "Overthink"
+        },
+        {
+            "id": "1-7",
+            "name": "Separation"
+        },
+        {
+            "id": "1-8",
+            "name": "Exact"
+        },
+        {
+            "id": "1-A",
+            "name": "Excess"
+        },
+        {
+            "id": "1-B",
+            "name": "Tiling"
+        },
+        {
+            "id": "2-1",
+            "name": "Dynamic"
+        },
+        {
+            "id": "2-2",
+            "name": "Groups"
+        },
+        {
+            "id": "2-3",
+            "name": "Snakes"
+        },
+        {
+            "id": "2-4",
+            "name": "Count"
+        },
+        {
+            "id": "2-5",
+            "name": "Distancing"
+        },
+        {
+            "id": "2-6",
+            "name": "Fillomino"
+        },
+        {
+            "id": "2-A",
+            "name": "Count II"
+        },
+        {
+            "id": "2-B",
+            "name": "Fillomino?"
+        },
+        {
+            "id": "3-1",
+            "name": "Value"
+        },
+        {
+            "id": "3-2",
+            "name": "Symmetry"
+        },
+        {
+            "id": "3-3",
+            "name": "Delta"
+        }
+    ]
+}

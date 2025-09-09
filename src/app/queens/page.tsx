@@ -3,6 +3,7 @@ import Queens from '../../components/Queens';
 export default function HomePage() {
     return (
         <div className="app">
+            <Queens />
             <div className="description">
                 <p>Queens Rules:</p>
                 <p>Place 1 queen in each row and column while following these rules:</p>
@@ -11,7 +12,6 @@ export default function HomePage() {
                     <li>No two queens can touch each other (orthogonally and diagonally).</li>
                 </ul>
             </div>
-            <Queens />
         </div>
     );
 }

@@ -479,7 +479,7 @@ function generateRangePuzzle(r: number, c: number): number[][] {
                             grid[i][k] = 0;
                         }
                     }
-                    if (grid[k][j] === 1) break;
+                    if (grid[i][k] === 1) break;
                 }
                 for (let k = j + 1; k < c; k++) {
                     if (grid[i][k] === 0) {
@@ -552,7 +552,7 @@ function generateRangePuzzle(r: number, c: number): number[][] {
                     grid[row][i] = 2;
                     visibleWhiteCells++;
                 }
-                if (grid[i][col] === 1 || visibleWhiteCells === whiteCells) break;
+                if (grid[row][i] === 1 || visibleWhiteCells === whiteCells) break;
             }
             if (visibleWhiteCells === whiteCells) return;
             for (let i = col + 1; i < grid[0].length; i++) {

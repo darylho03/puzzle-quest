@@ -122,6 +122,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         onDragOver={e => e.preventDefault()}
                         draggable={cell === 0}
                         correct={correctGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
+                        hidden={false}
                     />
                 )
             )}

@@ -3,6 +3,7 @@ import Area from '../../components/Area';
 export default function HomePage() {
     return (
         <div className="app">
+            <Area />
             <div className="description">
                 <p>Area (Nurikabe) Rules:</p>
                 <p>Fill the grid with black and white cells while following these rules:</p>
@@ -13,7 +14,6 @@ export default function HomePage() {
                     <li style={{color: 'red'}}>DISCLAIMER: This puzzle does not currently generate with a unique solution, so multiple solutions may exist. I intend to fix this soon.</li>
                 </ul>
             </div>
-            <Area />
         </div>
     );
 }
