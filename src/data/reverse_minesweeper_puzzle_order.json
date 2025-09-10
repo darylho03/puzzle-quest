@@ -50,11 +50,11 @@
         },
         {
             "id": "2-3",
-            "name": "Snakes"
+            "name": "Count"
         },
         {
             "id": "2-4",
-            "name": "Count"
+            "name": "Snakes"
         },
         {
             "id": "2-5",
@@ -83,6 +83,58 @@
         {
             "id": "3-3",
             "name": "Delta"
+        },
+        {
+            "id": "3-4",
+            "name": "Zero"
+        },
+        {
+            "id": "3-5",
+            "name": "Binary"
+        },
+        {
+            "id": "3-6",
+            "name": "Conflicts"
+        },
+        {
+            "id": "3-7",
+            "name": "Exhibit"
+        },
+        {
+            "id": "3-A",
+            "name": "Gallery"
+        },
+        {
+            "id": "3-B",
+            "name": "Museum"
+        },
+        {
+            "id": "4-1",
+            "name": "Stationary"
+        },
+        {
+            "id": "4-2",
+            "name": "Minesweeper"
+        },
+        {
+            "id": "4-A",
+            "name": "Count III"
+        },
+        {
+            "id": "4-B",
+            "name": "Minesweeper II"
+        },
+        {
+            "id": "5-1",
+            "name": "Inverse"
+        },
+        {
+            "id": "5-2",
+            "name": "Neutrality"
+        },
+        {
+            "id": "5-3",
+            "name": "Adjacency"
         }
     ]
 }
