@@ -8,9 +8,15 @@ const GRID_SIZE = 5;
 let ROW = 10;
 let COL = 10;
 
+function parseBlockInput(blocks: (string)[][], i: number, j: number): number[] | null {
+    const block = blocks[i][j];
+    if (block === " ") return null;
+    return block.split("|").map(Number);
+}
+
 export default function ReverseMinesweeper() {
     const [walls, setWalls] = useState<number[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
-    const [blocks, setBlocks] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
+    const [blocks, setBlocks] = useState<(number[] | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
     const [values, setValues] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
 
     function handleOnClick(name: string) {
@@ -19,7 +25,7 @@ export default function ReverseMinesweeper() {
         ROW = puzzle.walls.length;
         COL = puzzle.walls[0].length;
         const newWalls: number[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
-        const newBlocks: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
+        const newBlocks: (number[] | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
         const newValues: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
 
         const negativeMap = {
@@ -32,7 +38,7 @@ export default function ReverseMinesweeper() {
         for (let i = 0; i < puzzle.walls.length; i++) {
             for (let j = 0; j < puzzle.walls[0].length; j++) {
                 newWalls[i][j] = puzzle.walls[i][j] === " " ? 0 : 1;
-                newBlocks[i][j] = puzzle.blocks[i][j] === " " ? null : (negativeMap[puzzle.blocks[i][j]] !== undefined ? negativeMap[puzzle.blocks[i][j]] : Number(puzzle.blocks[i][j]));
+                newBlocks[i][j] = parseBlockInput(puzzle.blocks, i, j);
                 newValues[i][j] = puzzle.values[i][j] === " " ? null : (negativeMap[puzzle.values[i][j]] !== undefined ? negativeMap[puzzle.values[i][j]] : Number(puzzle.values[i][j]));
             }
         }

@@ -114,6 +114,10 @@
         },
         {
             "id": "4-2",
+            "name": "Search"
+        },
+        {
+            "id": "4-3",
             "name": "Minesweeper"
         },
         {
@@ -135,6 +139,54 @@
         {
             "id": "5-3",
             "name": "Adjacency"
+        },
+        {
+            "id": "5-A",
+            "name": "Gallery II"
+        },
+        {
+            "id": "5-B",
+            "name": "Checkers"
+        },
+        {
+            "id": "6-1",
+            "name": "Dual"
+        },
+        {
+            "id": "6-2",
+            "name": "Plus"
+        },
+        {
+            "id": "6-3",
+            "name": "Capped"
+        },
+        {
+            "id": "6-4",
+            "name": "Category"
+        },
+        {
+            "id": "6-5",
+            "name": "Jackpot"
+        },
+        {
+            "id": "6-6",
+            "name": "Polarity"
+        },
+        {
+            "id": "6-7",
+            "name": "Triple"
+        },
+        {
+            "id": "6-A",
+            "name": "Polarity II"
+        },
+        {
+            "id": "6-B",
+            "name": "Parity"
+        },
+        {
+            "id": "6-C",
+            "name": "Opposites"
         }
     ]
 }

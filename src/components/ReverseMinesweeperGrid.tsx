@@ -5,27 +5,40 @@ import ReverseMinesweeperSquare from './ReverseMinesweeperSquare';
 
 interface Props {
     walls: number[][];
-    blocks: (number | null)[][];
+    blocks: (number[] | null)[][];
     values: (number | null)[][];
 }
 
-function initializeCorrectness(blocks: (number | null)[][], values: (number | null)[][]) {
+function initializeCorrectness(blocks: (number[] | null)[][], values: (number | null)[][]): number[][] {
+    // console.log(`Initialize correctness`)
     let correct: number[][] = []
-    for (let i = 0; i < values.length; i++) {
-        for (let j = 0; j < values[0].length; j++) {
-            if (values[i][j] === null) continue;
-            let mines = 0;
-            for (const [dr, dc] of [[-1, -1],[-1, 0],[-1, 1],[0, -1],[0, 0],[0, 1],[1, -1],[1, 0],[1, 1]]) {
-                let x = i + dr;
-                let y = j + dc;
-                if ((x >= 0 && x < values.length && y >= 0 && y < values[0].length) && blocks[x][y] !== null) {
-                    mines += blocks[x][y];
-                }
-            }
-            if (values[i][j] === mines) {
+    const dirs = [[-1, -1],[-1, 0],[-1, 1],[0, -1],[0, 0],[0, 1],[1, -1],[1, 0],[1, 1]];
+    function backtrack(i: number, j: number, mines: number, index: number) {
+        if (index === 9) {
+            // console.log(`Checking cell (${i}, ${j}): found ${mines} mines, needs ${values[i][j]}`);
+            if (mines === values[i][j]) {
                 correct.push([i, j]);
             }
-
+            return;
+        }
+        if (values[i][j] === null) return;
+        let [dr, dc] = dirs[index];
+        let x = i + dr;
+        let y = j + dc;
+        if ((x >= 0 && x < values.length && y >= 0 && y < values[0].length) && blocks[x][y] !== null) {
+            blocks[x][y].forEach(b => {
+                if (correct.some(c => c[0] === i && c[1] === j)) return;
+                mines += b;
+                backtrack(i, j, mines, index + 1);
+                mines -= b;
+            });
+        } else {
+            backtrack(i, j, mines, index + 1);
+        }
+    }
+    for (let i = 0; i < values.length; i++) {
+        for (let j = 0; j < values[0].length; j++) {
+            backtrack(i, j, 0, 0);
         }
     }
     return correct
@@ -38,7 +51,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [wallGrid, setWallGrid] = useState<number[][]>(
         props.walls
     );
-    const [blockGrid, setBlockGrid] = useState<(number | null)[][]>(
+    const [blockGrid, setBlockGrid] = useState<(number[] | null)[][]>(
         props.blocks
     );
     const [valueGrid, setValueGrid] = useState<(number | null)[][]>(

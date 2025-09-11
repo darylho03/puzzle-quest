@@ -1,8 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 
+const colors = {
+    '0': 'rgba(102, 102, 102, 1)',
+    '1': 'rgb(165, 165, 255)',
+    '2': 'rgb(168, 255, 168)',
+    '3': 'rgba(255, 128, 125, 1)',
+    '4': 'rgb(123, 123, 179)',
+    '5': 'rgb(123, 67, 67)',
+    '6': 'rgba(0, 194, 194, 1)',
+    '7': 'rgba(73, 73, 73, 1)',
+    '8': 'rgba(164, 164, 164, 1)',
+    '9': 'rgba(255, 255, 255, 1)',
+    '-1': 'rgb(90, 90, 0)',
+    '-2': 'rgb(87, 0, 87)',
+    '-3': 'rgba(0, 127, 130, 1)',
+    '-4': 'rgb(132, 132, 76)',
+    '-5': 'rgb(132, 188, 188)',
+    '-6': 'rgba(255, 61, 61, 1)',
+    '-7': 'rgb(182, 182, 182)',
+    '-8': 'rgb(91, 91, 91)',
+    '-9': 'rgb(0, 0, 0)',
+}
+
 interface Props {
     wall: number;
-    block: number | null;
+    block: number[] | null;
     value: number | null;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
     onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -52,23 +74,38 @@ export default function ReverseMinesweeperSquare(props: Props) {
                 height: 80,
                 fontSize: 40,
             }}
-        >
-            {block !== null && <div
-                className={`reverse-minesweeper-block block-value-${block < 0 ? `minus-${block * -1}` : block}`}
+        > { block && block.length > 0 && <div
+                className={`reverse-minesweeper-block`}
                 draggable={draggable}
                 onContextMenu={handleContextMenu}
                 style={{
+                    background: block && block.length > 0
+                        ? (block.length === 1
+                            ? colors[block[0]]
+                            : `linear-gradient(to right, ${block
+                                .map((b, i) => {
+                                    const percentStart = Math.round((i / block.length) * 100);
+                                    const percentEnd = Math.round(((i + 1) / block.length) * 100);
+                                    return `${colors[b]} ${percentStart}%, ${colors[b]} ${percentEnd}%`;
+                                })
+                                .join(', ')})`
+                            )
+                        : undefined,
+                    color: block && block.length > 0 && block[0] < 0 ? 'white' : 'black',
                     width: 60,
                     height: 60,
-                    borderRadius: 25,
+                    borderRadius: 20,
+                    border: `2px solid black`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: `${draggable ? 'move' : 'default'}`,
-                }}
+                    }}
             >
-                {value !== null && <span className={`reverse-minesweeper-value ${correct ? "correct" : ""}`}>{hidden ? "?" : value}</span>}
+            
+            {value !== null && <span className={`reverse-minesweeper-value ${correct ? "correct" : ""}`}>{hidden ? "?" : value}</span>}
             </div>}
+
             {block === null && value !== null && <span className={`reverse-minesweeper-value ${correct ? "correct" : ""}`}>{hidden ? "?" : value}</span>}
             {popup && (
                 <div
@@ -86,7 +123,9 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     }}
                     onClick={handleClosePopup}
                 >
-                    Block value: {`${block < 0 ? `-${block * -1}` : `+${block}`}`}
+                    Block value: {block.map((b, index) => (
+                        <span key={index}>{b < 0 ? `-${b * -1}` : `+${b}`}{index < block.length - 1 ? ', ' : ''}</span>
+                    ))}
                 </div>
             )}
         </div>
