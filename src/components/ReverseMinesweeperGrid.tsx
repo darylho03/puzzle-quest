@@ -2,17 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import ReverseMinesweeperSquare from './ReverseMinesweeperSquare';
+import { markLevelCompleted } from '../firebaseUser';
 
 interface Props {
+    level_id?: string;
+    user_id?: string;
     walls: number[][];
     blocks: (number[] | null)[][];
     values: (number | null)[][];
+    operations: (string[] | null)[][];
 }
 
-function initializeCorrectness(blocks: (number[] | null)[][], values: (number | null)[][]): number[][] {
+function initializeCorrectness(blocks: (number[] | null)[][], values: (number | null)[][], operations: (string[] | null)[][]): number[][] {
     // console.log(`Initialize correctness`)
     let correct: number[][] = []
-    const dirs = [[-1, -1],[-1, 0],[-1, 1],[0, -1],[0, 0],[0, 1],[1, -1],[1, 0],[1, 1]];
+    // console.log(operations);
+    const dirs = [[0, 0],[-1, -1],[-1, 0],[-1, 1],[0, -1],[0, 1],[1, -1],[1, 0],[1, 1]];
     function backtrack(i: number, j: number, mines: number, index: number) {
         if (index === 9) {
             // console.log(`Checking cell (${i}, ${j}): found ${mines} mines, needs ${values[i][j]}`);
@@ -26,11 +31,23 @@ function initializeCorrectness(blocks: (number[] | null)[][], values: (number | 
         let x = i + dr;
         let y = j + dc;
         if ((x >= 0 && x < values.length && y >= 0 && y < values[0].length) && blocks[x][y] !== null) {
-            blocks[x][y].forEach(b => {
+            blocks[x][y].forEach((b, idx) => {
+                let tempMines = mines;
+                // console.log(`At cell (${i}, ${j}), direction (${dr}, ${dc}), considering block value ${b} at index ${idx}`);
                 if (correct.some(c => c[0] === i && c[1] === j)) return;
-                mines += b;
+                // Use operation on mine count
+                if (operations && operations[x][y][idx] === 'x') {
+                    mines *= b;
+                } else if (operations && operations[x][y][idx] === '/') {
+                    mines /= b;
+                } else if (operations && operations[x][y][idx] === '-') {
+                    mines -= b;
+                } else {
+                    mines += b;
+                }
                 backtrack(i, j, mines, index + 1);
-                mines -= b;
+                // Undo operation
+                mines = tempMines;
             });
         } else {
             backtrack(i, j, mines, index + 1);
@@ -57,6 +74,9 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [valueGrid, setValueGrid] = useState<(number | null)[][]>(
         props.values
     );
+    const [operationsGrid, setOperationsGrid] = useState<(string[] | null)[][]>(
+        props.operations
+    );
     const [correctGrid, setCorrectGrid] = useState<(number[][])>(
         []
     )
@@ -64,7 +84,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [solved, setSolved] = useState<boolean>(false)
 
     useEffect(() => {
-        setCorrectGrid(initializeCorrectness(props.blocks, props.values));
+        setCorrectGrid(initializeCorrectness(props.blocks, props.values, props.operations));
     }, [props.blocks, props.values]);
 
     useEffect(() => {
@@ -79,22 +99,44 @@ export default function ReverseMinesweeperGrid(props: Props) {
     useEffect(() => {
         setValueGrid(props.values);
     }, [props.values]);
+    useEffect(() => {
+        setOperationsGrid(props.operations);
+    }, [props.operations]);
 
     function handleDragStart(idx: number[]) {
-        if (!wallGrid[idx[0]][idx[1]]) {
+        if (wallGrid[idx[0]][idx[1]] !== 1) {
             setDraggedIdx(idx);
         }
     }
 
-    function handleDrop(idx: number[]) {
-        if (draggedIdx === null || draggedIdx === idx || wallGrid[idx[0]][idx[1]] === 1) return;
+    async function handleDrop(idx: number[]) {
+        console.log(`Handle drop: Starting idx: ${draggedIdx}, ending idx: ${idx}`)
+        if (draggedIdx === null || draggedIdx === idx || wallGrid[idx[0]][idx[1]] === 3 || (wallGrid[idx[0]][idx[1]] === 1 && wallGrid[draggedIdx[0]][draggedIdx[1]] !== 2)) return;
         const newBlockGrid = [...blockGrid];
         const newValueGrid = [...valueGrid];
-        [newBlockGrid[draggedIdx[0]][draggedIdx[1]], newBlockGrid[idx[0]][idx[1]]] = [newBlockGrid[idx[0]][idx[1]], newBlockGrid[draggedIdx[0]][draggedIdx[1]]];
-        [newValueGrid[draggedIdx[0]][draggedIdx[1]], newValueGrid[idx[0]][idx[1]]] = [newValueGrid[idx[0]][idx[1]], newValueGrid[draggedIdx[0]][draggedIdx[1]]];
+        const newWallGrid = [...wallGrid];
+        const newOperationsGrid = [...operationsGrid];
+        // console.log(newWallGrid);
+
+        // Drag wallbreaker onto wall
+        if (wallGrid[idx[0]][idx[1]] === 1 && wallGrid[draggedIdx[0]][draggedIdx[1]] === 2) {
+            console.log(`Breaking wall at: ${idx}`);
+            newWallGrid[idx[0]][idx[1]] = 0;
+            newWallGrid[draggedIdx[0]][draggedIdx[1]] = 0;
+            newBlockGrid[idx[0]][idx[1]] = newBlockGrid[idx[0]][idx[1]] === null ? (newValueGrid[idx[0]][idx[1]] === null ? null : [0]) : newBlockGrid[idx[0]][idx[1]];
+            newBlockGrid[draggedIdx[0]][draggedIdx[1]] = null;
+            newValueGrid[draggedIdx[0]][draggedIdx[1]] = null;
+        } else {
+            // Normal swapping behavior onto empty space
+            [newBlockGrid[draggedIdx[0]][draggedIdx[1]], newBlockGrid[idx[0]][idx[1]]] = [newBlockGrid[idx[0]][idx[1]], newBlockGrid[draggedIdx[0]][draggedIdx[1]]];
+            [newValueGrid[draggedIdx[0]][draggedIdx[1]], newValueGrid[idx[0]][idx[1]]] = [newValueGrid[idx[0]][idx[1]], newValueGrid[draggedIdx[0]][draggedIdx[1]]];
+            [newWallGrid[draggedIdx[0]][draggedIdx[1]], newWallGrid[idx[0]][idx[1]]] = [newWallGrid[idx[0]][idx[1]], newWallGrid[draggedIdx[0]][draggedIdx[1]]];
+            [newOperationsGrid[draggedIdx[0]][draggedIdx[1]], newOperationsGrid[idx[0]][idx[1]]] = [newOperationsGrid[idx[0]][idx[1]], newOperationsGrid[draggedIdx[0]][draggedIdx[1]]];
+        }
         setBlockGrid(newBlockGrid);
         setValueGrid(newValueGrid);
-        const newCorrectGrid = initializeCorrectness(newBlockGrid, newValueGrid);
+        setWallGrid(newWallGrid);
+        const newCorrectGrid = initializeCorrectness(newBlockGrid, newValueGrid, newOperationsGrid);
         setCorrectGrid(newCorrectGrid);
         let count = 0;
         for (let i = 0; i < newValueGrid.length; i++) {
@@ -106,8 +148,15 @@ export default function ReverseMinesweeperGrid(props: Props) {
         }
         // console.log(newValueGrid.filter(val => val !== null));
         // console.log(count, newCorrectGrid.length);
-        setSolved(count === newCorrectGrid.length);
+        const solvedNow = count === newCorrectGrid.length;
+        setSolved(solvedNow);
         setDraggedIdx(null);
+        // Mark level as complete in Firebase if solved
+        if (solvedNow && props.user_id && props.level_id) {
+            await markLevelCompleted(props.user_id, props.level_id);
+        }
+        console.log(newBlockGrid);
+        console.log(newValueGrid);
     }
 
     return (
@@ -130,10 +179,11 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         wall={cell}
                         block={blockGrid[rowIndex][colIndex]}
                         value={valueGrid[rowIndex][colIndex]}
+                        operation={operationsGrid[rowIndex][colIndex]}
                         onDragStart={() => handleDragStart([rowIndex, colIndex])}
                         onDrop={() => handleDrop([rowIndex, colIndex])}
                         onDragOver={e => e.preventDefault()}
-                        draggable={cell === 0}
+                        draggable={cell !== 1}
                         correct={correctGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
                         hidden={false}
                     />

@@ -1,6 +1,9 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { UserContext } from '../UserContext';
+import { signInWithGoogle } from '../firebaseUser';
 import Card from './Card';
 
 const PUZZLE_TABS = [
@@ -35,12 +38,22 @@ const PUZZLE_TABS = [
 
 export default function NavBar() {
   const [openTab, setOpenTab] = useState<number | null>(null);
+  const context = useContext(UserContext);
+  const user = context?.user;
+  const setUser = context?.setUser;
 
   const handleTabClick = (idx: number) => {
-    // console.log('Clicked tab', idx);
     const newOpenTab = openTab === idx ? null : idx;
     setOpenTab(newOpenTab);
-    // console.log('Open tab is now', newOpenTab);
+  };
+
+  const handleSignIn = async () => {
+    try {
+      const signedInUser = await signInWithGoogle();
+      setUser(signedInUser);
+    } catch (err) {
+      alert('Sign in failed');
+    }
   };
 
   return (
@@ -75,6 +88,9 @@ export default function NavBar() {
             )}
           </li>
         ))}
+        {/* <button onClick={handleSignIn} style={{ padding: '6px 16px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}>
+          {user ? `Signed in as ${user.displayName}` : 'Sign in with Google'}
+        </button> */}
       </ul>
     </div>
   );
