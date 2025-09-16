@@ -46,7 +46,7 @@
     {"id": "6-7", "name": "Triple", "difficulty": 1, "unlocks": ["6-8"]},
     {"id": "6-8", "name": "Opposites", "difficulty": 1, "unlocks": ["6-A"]},
     {"id": "6-A", "name": "Polarity II", "difficulty": 2, "unlocks": ["6-B"]},
-    {"id": "6-B", "name": "Opposites II", "difficulty": 3, "unlocks": []},
+    {"id": "6-B", "name": "Opposites II", "difficulty": 4, "unlocks": []},
     {"id": "7-1", "name": "Wallbreaker", "difficulty": 1, "unlocks": []},
     {"id": "7-2", "name": "Digout", "difficulty": 1, "unlocks": []},
     {"id": "7-3", "name": "Extraction", "difficulty": 1, "unlocks": []},

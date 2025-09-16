@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { UserContext } from '../UserContext';
 import NavBar from './NavBar';
 
+
+
 export default function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
 

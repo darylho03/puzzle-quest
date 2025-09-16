@@ -79,7 +79,7 @@ export default function ReverseMinesweeper() {
         .map((p: { id: string, name: string, difficulty: number }, idx: number) => ({
             value: p.name,
             label: `${p.id}: ${p.name}`,
-            color: ["green", "#ffe734", "red"][p.difficulty - 1],
+            color: ["green", "#ffe734", "red", "#740076"][p.difficulty - 1],
             zIndex: 100
         }));
 

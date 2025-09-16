@@ -183,7 +183,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         onDragStart={() => handleDragStart([rowIndex, colIndex])}
                         onDrop={() => handleDrop([rowIndex, colIndex])}
                         onDragOver={e => e.preventDefault()}
-                        draggable={cell !== 1}
+                        draggable={cell !== 1 && cell !== 3}
                         correct={correctGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
                         hidden={false}
                     />
