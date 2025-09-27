@@ -1,4 +1,3 @@
-import { transcode } from 'buffer';
 import { useState, useEffect, useRef } from 'react';
 
 const colors = {
