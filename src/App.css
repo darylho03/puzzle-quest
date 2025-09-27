@@ -283,7 +283,7 @@
   object-fit: cover;
   padding: calc(2*var(--s));
   box-sizing: border-box;
-  /* background: black; */
+  background: black;
   --_m: #0000 0 calc(2*atan(.5)), black 0 50%;
   mask:
     repeating-conic-gradient(from atan(2) at 50% var(--s), var(--_m)) calc(2*var(--s)) calc(-1*var(--s))/calc(4*var(--s)) 100% intersect,
@@ -389,5 +389,25 @@ body {
 }
 
 .test {
-  background-color: #ffe734;
+  background-color: rgb(132, 91, 91);
+}
+
+.rainbow-text {
+  background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: rainbow 5s linear infinite;
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 400% 50%;
+  }
 }
