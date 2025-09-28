@@ -15,14 +15,18 @@ interface Props {
     blockTypes: (number | null)[][];
 }
 
-function initializeCorrectness(blocks: (number[][] | null)[][], values: (number | null)[][], operations: (string[][] | null)[][]): number[][] {
+function initializeCorrectness(blocks: (number[][] | null)[][], values: (number | null)[][], operations: (string[][] | null)[][]): [number[][], number[][], (number[] | null)[][]] {
     // console.log(`Initialize correctness`)
     let correct: number[][] = []
+    let incorrect: number[][] = []
+    let currentValues: (number[] | null)[][] = Array(values.length).fill(null).map(() => Array(values[0].length).fill(null).map(() => []));
     // console.log(operations);
     const dirs = [[0, 0],[-1, -1],[-1, 0],[-1, 1],[0, -1],[0, 1],[1, -1],[1, 0],[1, 1]];
     function backtrack(i: number, j: number, mines: number, index: number) {
         if (index === 9) {
             // console.log(`Checking cell (${i}, ${j}): found ${mines} mines, needs ${values[i][j]}`);
+            if (values[i][j] === null) return;
+            currentValues[i][j].push(mines);
             if (mines === values[i][j]) {
                 if (!correct.some(c => c[0] === i && c[1] === j)) {
                     correct.push([i, j]);
@@ -30,7 +34,7 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
             }
             return;
         }
-        if (values[i][j] === null) return;
+        // if (values[i][j] === null) return;
         let [dr, dc] = dirs[index];
         let x = i + dr;
         let y = j + dc;
@@ -57,13 +61,18 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
                     const op = opCombos[comboIdx] && opCombos[comboIdx][idx] ? opCombos[comboIdx][idx] : '+';
                     if (op === 'x') tempMines *= b;
                     else if (op === '/') tempMines /= b;
+                    else if (op === '+') tempMines += b;
                     else if (op === '-') tempMines -= b;
                     else if (op === '^') tempMines = Math.pow(tempMines, b);
                     else if (op === '%') tempMines %= b;
                     else if (op === '=') tempMines = b;
-                    else if (op === '<') tempMines = Math.min(tempMines, b);
-                    else if (op === '>') tempMines = Math.max(tempMines, b);
-                    else tempMines += b;
+                    else if (op === '←') tempMines = Math.min(tempMines, b);
+                    else if (op === '→') tempMines = Math.max(tempMines, b);
+                    else if (op === '√') tempMines = Math.sqrt(b);
+                    else if (op === '==' && tempMines !== b) incorrect.push([i, j]);
+                    else if (op === '!=' && tempMines === b) incorrect.push([i, j]);
+                    else if (op === '<' && tempMines >= b) incorrect.push([i, j]);
+                    else if (op === '>' && tempMines <= b) incorrect.push([i, j]);
                 });
                 backtrack(i, j, tempMines, index + 1);
             });
@@ -76,7 +85,30 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
             backtrack(i, j, 0, 0);
         }
     }
-    return correct
+
+    // Sort each list of current values and remove duplicates
+    for (let i = 0; i < currentValues.length; i++) {
+        for (let j = 0; j < currentValues[0].length; j++) {
+            if (currentValues[i][j] !== null) {
+                // Sort and remove duplicates
+                currentValues[i][j] = Array.from(new Set(currentValues[i][j])).sort((a, b) => a - b);
+                // If list is empty, set to null
+                if (currentValues[i][j].length === 0) currentValues[i][j] = null;
+            }
+        }
+    }
+
+    // Remove any cells without values from correct and incorrect
+    correct = correct.filter(c => values[c[0]][c[1]] !== null);
+    incorrect = incorrect.filter(inc => values[inc[0]][inc[1]] !== null);
+
+    // Remove any incorrect cells from correct
+    correct = correct.filter(c => !incorrect.some(inc => inc[0] === c[0] && inc[1] === c[1]));
+    // Remove duplicates from incorrect
+    incorrect = incorrect.filter((inc, idx) => idx === incorrect.findIndex(i => i[0] === inc[0] && i[1] === inc[1]));
+    // console.log(`Incorrect cells: ${incorrect}`);
+    // console.log(`Correct cells: ${correct}`);
+    return [correct, incorrect, currentValues];
 }
 
 let ROWS = 10;
@@ -92,6 +124,9 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [valueGrid, setValueGrid] = useState<(number | null)[][]>(
         props.values
     );
+    const [currentValues, setCurrentValues] = useState<(number[] | null)[][]>(
+        Array(props.values.length).fill(null).map(() => Array(props.values[0].length).fill(null))
+    );
     const [operationsGrid, setOperationsGrid] = useState<(string[][] | null)[][]>(
         props.operations
     );
@@ -102,11 +137,18 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [correctGrid, setCorrectGrid] = useState<(number[][])>(
         []
     )
+    const [incorrectGrid, setIncorrectGrid] = useState<(number[][])>(
+        []
+    )
+    // Index of currently dragged cell
     const [draggedIdx, setDraggedIdx] = useState<number[] | null>(null)
     const [solved, setSolved] = useState<boolean>(false)
 
     useEffect(() => {
-        setCorrectGrid(initializeCorrectness(props.blocks, props.values, props.operations));
+        const [newCorrectGrid, newIncorrectGrid, newCurrentValues] = initializeCorrectness(props.blocks, props.values, props.operations);
+        setCorrectGrid(newCorrectGrid);
+        setIncorrectGrid(newIncorrectGrid);
+        setCurrentValues(newCurrentValues);
     }, [props.blocks, props.values]);
 
     useEffect(() => {
@@ -142,19 +184,19 @@ export default function ReverseMinesweeperGrid(props: Props) {
         const newWallGrid = [...wallGrid];
         const newOperationsGrid = [...operationsGrid];
         const newBlockTypesGrid = [...blockTypesGrid];
-        // console.log(newWallGrid);
+        // console.log(newBlockGrid);
 
         // Drag wallbreaker onto wall
         if (newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] < 0 && newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] * -1 === wallGrid[idx[0]][idx[1]]) {
-            // console.log(`Breaking wall at: ${idx}`);
+            console.log(`Breaking wall at: ${idx}`);
+            newBlockGrid[idx[0]][idx[1]] = newBlockGrid[idx[0]][idx[1]] === null ? (newValueGrid[idx[0]][idx[1]] === null ? null : [[wallGrid[idx[0]][idx[1]] - 1]]) : newBlockGrid[idx[0]][idx[1]];
             newWallGrid[idx[0]][idx[1]] = 0;
-            // newWallGrid[draggedIdx[0]][draggedIdx[1]] = 0;
-            newBlockGrid[idx[0]][idx[1]] = newBlockGrid[idx[0]][idx[1]] === null ? (newValueGrid[idx[0]][idx[1]] === null ? null : [[0]]) : newBlockGrid[idx[0]][idx[1]];
             newBlockGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newValueGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newOperationsGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newOperationsGrid[idx[0]][idx[1]] = newOperationsGrid[idx[0]][idx[1]] === null ? (newBlockGrid[idx[0]][idx[1]] === null ? null : newBlockGrid[idx[0]][idx[1]].map((b) => (b.map(() => '+')))) : newOperationsGrid[idx[0]][idx[1]];
+            newBlockTypesGrid[idx[0]][idx[1]] = newBlockTypesGrid[idx[0]][idx[1]] === null ? (newBlockGrid[idx[0]][idx[1]] === null ? null : 0) : newBlockTypesGrid[idx[0]][idx[1]];
         } else {
             // Normal swapping behavior onto empty space
             // console.log(`Swapping cells: ${draggedIdx} and ${idx}`);
@@ -167,8 +209,15 @@ export default function ReverseMinesweeperGrid(props: Props) {
         setBlockGrid(newBlockGrid);
         setValueGrid(newValueGrid);
         setWallGrid(newWallGrid);
-        const newCorrectGrid = initializeCorrectness(newBlockGrid, newValueGrid, newOperationsGrid);
+        setOperationsGrid(newOperationsGrid);
+        setBlockTypesGrid(newBlockTypesGrid);
+        // Recalculate correctness
+        const [newCorrectGrid, newIncorrectGrid, newCurrentValues] = initializeCorrectness(newBlockGrid, newValueGrid, newOperationsGrid);
         setCorrectGrid(newCorrectGrid);
+        setIncorrectGrid(newIncorrectGrid);
+        setCurrentValues(newCurrentValues);
+        console.log(newCurrentValues);
+
         let count = 0;
         for (let i = 0; i < newValueGrid.length; i++) {
             for (let j = 0; j < newValueGrid[0].length; j++) {
@@ -188,6 +237,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
         }
         // console.log(newBlockGrid);
         // console.log(newValueGrid);
+        console.log(newIncorrectGrid);
     }
 
     return (
@@ -211,6 +261,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         wall={cell}
                         block={blockGrid[rowIndex][colIndex]}
                         value={valueGrid[rowIndex][colIndex]}
+                        currentValue={currentValues[rowIndex][colIndex]}
                         operation={operationsGrid[rowIndex][colIndex]}
                         blockType={blockTypesGrid[rowIndex][colIndex]}
                         onDragStart={() => handleDragStart([rowIndex, colIndex])}
@@ -218,6 +269,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         onDragOver={e => e.preventDefault()}
                         draggable={cell <= 0}
                         correct={correctGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
+                        incorrect={incorrectGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
                         hidden={false}
                     />
                 )

@@ -24,8 +24,16 @@ const colors = {
 
 const wallColors = {
     '0': '#BDBDBD', // empty
-    '1': '#666666', // wall
-    '2': '#222222', // wall 2
+    '1': 'rgba(102, 102, 102, 1)',
+    '2': 'rgb(165, 165, 255)',
+    '3': 'rgb(168, 255, 168)',
+    '4': 'rgba(255, 128, 125, 1)',
+    '5': 'rgb(123, 123, 179)',
+    '6': 'rgb(132, 91, 91)',
+    '7': 'rgba(0, 194, 194, 1)',
+    '8': 'rgba(73, 73, 73, 1)',
+    '9': 'rgba(164, 164, 164, 1)',
+    '10': 'rgba(255, 255, 255, 1)',
 }
 
 interface Props {
@@ -33,6 +41,7 @@ interface Props {
     wall: number;
     block: number[][] | null;
     value: number | null;
+    currentValue: number[] | null;
     operation: string[][] | null;
     blockType: number | null;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -40,11 +49,12 @@ interface Props {
     onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
     draggable: boolean;
     correct: boolean;
+    incorrect: boolean;
     hidden: boolean;
 }
 
 export default function ReverseMinesweeperSquare(props: Props) {
-    const { mode, wall, block, value, operation, blockType, onDragStart, onDrop, onDragOver, draggable, correct, hidden } = props;
+    const { mode, wall, block, value, currentValue, operation, blockType, onDragStart, onDrop, onDragOver, draggable, incorrect, correct, hidden } = props;
     const [popup, setPopup] = useState<{ x: number, y: number } | null>(null);
     const popupRef = useRef<HTMLDivElement>(null);
 
@@ -166,7 +176,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     {/* Overlay the value, centered */}
                     {(
                         <span
-                            className={`reverse-minesweeper-value ${correct ? 'correct' : ''}`}
+                            className={`reverse-minesweeper-value`}
                             style={{
                                 position: 'absolute',
                                 top: '50%',
@@ -175,7 +185,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                                 // zIndex: 2,
                                 // Color is white if block value is negative
                                 // color: (block && block.every(b => b < 0) ? (mode === "Value" ? '#76FFFF' : (correct ? '#00FF00' :'white')) : mode === "Value" ? '#760000' : (correct ? '#00FF00' : 'black')),
-                                color: (block && block.every(r => r.every(b => b < 0)) ? (correct ? '#00FF00' : 'white') : (correct ? '#00FF00' : 'black')),
+                                color: (block && block.every(r => r.every(b => b < 0)) ? (incorrect ? 'red' : (correct ? '#3cff00' : 'white')) : (incorrect ? 'red' : (correct ? '#3cff00' : 'black'))),
                                 // textShadow: (block && block.every(b => b < 0) || correct)
                                 //     ? '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
                                 //     : '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
@@ -307,13 +317,13 @@ export default function ReverseMinesweeperSquare(props: Props) {
                         ))}
                         {/* Overlay the value, centered */}
                         <span
-                            className={`reverse-minesweeper-value ${correct ? 'correct' : ''}`}
+                            className={`reverse-minesweeper-value`}
                             style={{
                                 position: 'absolute',
                                 top: '50%',
                                 left: '50%',
                                 transform: 'translate(-50%, -50%)',
-                                color: (block && block.every(r => r.every(b => b < 0)) ? (correct ? '#00FF00' : 'white') : (correct ? '#00FF00' : 'black')),
+                                color: ((block && block.every(r => r.every(b => b < 0)) ? (incorrect ? 'red' : (correct ? '#3cff00' : 'white')) : (incorrect ? 'red' : (correct ? '#3cff00' : 'black')))),
                                 WebkitTextStrokeWidth: block.length > 1 || block[0].length > 1 ? '1px' : '0',
                                 WebkitTextStrokeColor: (block && block.every(r => r.every(b => b < 0)) || correct) ? 'black' : 'white',
                                 pointerEvents: 'none',
@@ -321,27 +331,46 @@ export default function ReverseMinesweeperSquare(props: Props) {
                                 fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
                             }}
                         >
-                            {value}
+                            {mode === 'Normal' ? value : currentValue !== null ? currentValue[0] : ''}
                         </span>
+                        {/* If in value mode and currentValue exists, show it in the bottom right */}
                     </div>
                 </div>
             )}
             {/* If no block, just show the value centered */}
             {block === null && value !== null && (
                 <span
-                    className={`reverse-minesweeper-value ${correct ? 'correct' : ''}`}
+                    className={`reverse-minesweeper-value`}
                     style={{
                         position: 'absolute',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        // zIndex: 2,
+                        color: (incorrect ? 'red' : (correct ? '#3cff00' : 'black')),
                         fontSize: (value < 99 ? 32 : (value < 999 ? 28 : 24)),
                         fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
                     }}
                 >
                     {value}
                 </span>
+            )}
+            {/* If in value mode and currentValue exists, show it in the bottom right */}
+            {mode === 'Value' && currentValue && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 2,
+                        fontSize: 14,
+                        color: '#8a3333',
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        pointerEvents: 'none',
+                        fontFamily: 'monospace',
+                    }}
+                >
+                    {/* Show the correct value if it is correct, otherwise show the current value closest to value*/}
+                    {correct ? value : currentValue.sort((a, b) => Math.abs(a - (value || 0)) - Math.abs(b - (value || 0)))[0]}
+                </div>
             )}
             {/* Popup for block info */}
             {popup && (value || block) && (
@@ -361,7 +390,8 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     }}
                     onClick={handleClosePopup}
                 >
-                    {blockType < 0 && <><span>Wall breaker</span><br /></>}
+                    {wall > 0 && <><span>Wall {wall > 1 ? wall - 1 : ''}</span><br /></>}
+                    {blockType < 0 && <><span>Wallbreaker {blockType < -1 ? blockType * -1 - 1 : ''}</span><br /></>}
                     {block && (
                         <span>
                             Block: {
@@ -380,8 +410,21 @@ export default function ReverseMinesweeperSquare(props: Props) {
                             }
                         </span>
                     )}
-                    {value !== null && <span>Value: {hidden ? '?' : (value !== null ? value : 'N/A')}</span>}
+                    {value !== null && <span>Value: {hidden ? '?' : (value !== null ? value : 'N/A')}<br /></span>}
+                    {currentValue !== null && (
+                        <span>
+                            Current: {
+                                currentValue.map((cv, idx) => (
+                                    <span key={`current-${idx}`}>
+                                        {cv < 0 ? `-${cv * -1}` : `${cv}`}
+                                        {idx < currentValue.length - 1 ? ' or ' : ''}
+                                    </span>
+                                ))
+                            }
+                        </span>
+                    )}
                 </div>
+                     
             )}
         </div>
     );

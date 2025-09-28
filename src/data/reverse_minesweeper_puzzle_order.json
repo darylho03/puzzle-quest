@@ -60,26 +60,33 @@
         {"id": "7-2", "name": "Digout", "difficulty": 1, "unlocks": []},
         {"id": "7-3", "name": "Extraction", "difficulty": 1, "unlocks": []},
         {"id": "7-4", "name": "Immune", "difficulty": 1, "unlocks": []},
-        {"id": "7-5", "name": "Immune?", "difficulty": 1, "unlocks": []},
-        {"id": "7-6", "name": "Necessary", "difficulty": 1, "unlocks": []},
-        {"id": "7-7", "name": "Choices", "difficulty": 1, "unlocks": []},
+        {"id": "7-5", "name": "Necessary", "difficulty": 1, "unlocks": []},
+        {"id": "7-6", "name": "Choices", "difficulty": 1, "unlocks": []},
+        {"id": "7-7", "name": "Immune?", "difficulty": 1, "unlocks": []},
+        {"id": "7-8", "name": "Types", "difficulty": 1, "unlocks": []},
+        {"id": "7-9", "name": "Lockpick", "difficulty": 2, "unlocks": []},
         {"id": "7-A", "name": "Choices II", "difficulty": 4, "unlocks": []},
         {"id": "8-1", "name": "Operation", "difficulty": 1, "unlocks": []},
         {"id": "8-2", "name": "Factors", "difficulty": 1, "unlocks": []},
         {"id": "8-3", "name": "Order", "difficulty": 1, "unlocks": []},
         {"id": "8-4", "name": "Identities", "difficulty": 1, "unlocks": []},
+        {"id": "8-5", "name": "Deoperation", "difficulty": 1, "unlocks": []},
+        {"id": "8-6", "name": "Nonfactors", "difficulty": 1, "unlocks": []},
         {"id": "8-A", "name": "Large", "difficulty": 3, "unlocks": []},
         {"id": "8-B", "name": "Equations", "difficulty": 4, "unlocks": []}
     ],
     "extra_puzzles": [
         {"id": "6-5", "name": "Jackpot", "difficulty": 1, "unlocks": ["6-6"]},
-        {"id": "9-1", "name": "Deoperation", "difficulty": 1, "unlocks": []},
-        {"id": "9-2", "name": "Nonfactors", "difficulty": 1, "unlocks": []},
         {"id": "10-1", "name": "Absolute", "difficulty": 1, "unlocks": []},
         {"id": "A-1", "name": "Double", "difficulty": 1, "unlocks": []},
         {"id": "A-2", "name": "Mercy", "difficulty": 1, "unlocks": []},
         {"id": "A-3", "name": "Multi", "difficulty": 1, "unlocks": []},
-        {"id": "A-A", "name": "Merciless", "difficulty": 3, "unlocks": []}
+        {"id": "A-A", "name": "Merciless", "difficulty": 3, "unlocks": []},
+        {"id": "A-1", "name": "Double", "difficulty": 1, "unlocks": []},
+        {"id": "A-2", "name": "Mercy", "difficulty": 1, "unlocks": []},
+        {"id": "A-3", "name": "Multi", "difficulty": 1, "unlocks": []},
+        {"id": "A-A", "name": "Merciless", "difficulty": 3, "unlocks": []},
+        {"id": "B-1", "name": "Condition", "difficulty": 1, "unlocks": []}
     ]
     
 }
