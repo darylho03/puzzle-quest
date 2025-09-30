@@ -126,7 +126,7 @@ export default function ReverseMinesweeper() {
 
     return (
         <div className='reverse-minesweeper'>
-            <h1>Reverse Minesweeper</h1>
+            <h1>Sweepminer (Reverse Minesweeper)</h1>
             <label htmlFor="level-select">Select Puzzle Level: </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
                 <button

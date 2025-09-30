@@ -331,7 +331,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                                 fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
                             }}
                         >
-                            {mode === 'Normal' ? value : currentValue !== null ? currentValue[0] : ''}
+                            {value}
                         </span>
                         {/* If in value mode and currentValue exists, show it in the bottom right */}
                     </div>
@@ -373,7 +373,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                 </div>
             )}
             {/* Popup for block info */}
-            {popup && (value || block) && (
+            {popup && (wall || value || block) && (
                 <div
                     ref={popupRef}
                     style={{
@@ -399,8 +399,9 @@ export default function ReverseMinesweeperSquare(props: Props) {
                                     <span key={`row-${rowIdx}`}>
                                         {r.map((b, i) => (
                                             <span key={`block-${rowIdx}-${i}`}>
-                                                {operation && operation[rowIdx] && operation[rowIdx][i] !== '+' ? operation[rowIdx][i] : (b > 0 ? '+' : '')}
+                                                {operation && operation[rowIdx] && operation[rowIdx][i] !== '+' ? (operation[rowIdx][i] === '√' ? '' : operation[rowIdx][i]) : (b > 0 ? '+' : '')}
                                                 {b < 0 ? `-${b * -1}` : `${b}`}
+                                                {operation && operation[rowIdx] && operation[rowIdx][i] === '√' ? ' (square root)' : ''}
                                                 {i < r.length - 1 ? ' or ' : ''}  
                                             </span>
                                         ))}
@@ -414,9 +415,9 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     {currentValue !== null && (
                         <span>
                             Current: {
-                                currentValue.map((cv, idx) => (
+                                currentValue.sort((a, b) => a - b).map((cv, idx) => (
                                     <span key={`current-${idx}`}>
-                                        {cv < 0 ? `-${cv * -1}` : `${cv}`}
+                                        {`${cv}`}
                                         {idx < currentValue.length - 1 ? ' or ' : ''}
                                     </span>
                                 ))

@@ -68,7 +68,7 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
                     else if (op === '=') tempMines = b;
                     else if (op === '←') tempMines = Math.min(tempMines, b);
                     else if (op === '→') tempMines = Math.max(tempMines, b);
-                    else if (op === '√') tempMines = Math.sqrt(b);
+                    else if (op === '√') tempMines = Math.pow(tempMines, 1 / b);
                     else if (op === '==' && tempMines !== b) incorrect.push([i, j]);
                     else if (op === '!=' && tempMines === b) incorrect.push([i, j]);
                     else if (op === '<' && tempMines >= b) incorrect.push([i, j]);
