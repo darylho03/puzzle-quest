@@ -401,7 +401,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                                             <span key={`block-${rowIdx}-${i}`}>
                                                 {operation && operation[rowIdx] && operation[rowIdx][i] !== '+' ? (operation[rowIdx][i] === '√' ? '' : operation[rowIdx][i]) : (b > 0 ? '+' : '')}
                                                 {b < 0 ? `-${b * -1}` : `${b}`}
-                                                {operation && operation[rowIdx] && operation[rowIdx][i] === '√' ? ' (square root)' : ''}
+                                                {operation && operation[rowIdx] && operation[rowIdx][i] === '√' ? '√ (root)' : ''}
                                                 {i < r.length - 1 ? ' or ' : ''}  
                                             </span>
                                         ))}
