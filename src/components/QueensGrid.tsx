@@ -1,226 +1,246 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import QueensSquare from './QueensSquare';
+import { PuzzleType } from '../puzzles/core/puzzle-type';
+
+export interface QueensAction {
+  type: 'place' | 'delete';
+  row: number;
+  col: number;
+  value: number;
+  previousValue: number;
+  errors: { row: number; col: number }[];
+  gridSnapshot: number[][];
+}
 
 interface Props {
-    regions: number[][];
-    grid: number[][];
+  initialGrid: number[][];
+  regionMap: number[][];
+  puzzleType: PuzzleType<number>;
+  onAction?: (action: QueensAction) => void;
+  revealCell?: { row: number; col: number } | null;
+  hintCell?: { row: number; col: number } | null;
 }
 
-function checkInvalidCells(grid: number[][], regionGrid: number[][], setInvalidCells: (cells: {row: number, col: number}[]) => void) {
-    const invalid: {row: number, col: number}[] = [];
+function computeAutoDots(grid: number[][], regionMap: number[][], gridSize: number): Set<string> {
+  const dots = new Set<string>();
 
-    function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
-        // Check the column & row
-        for (let i = 0; i < grid.length; i++) {
-            if (i !== row && grid[i][col] === 2) {
-                return true;
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      if (grid[row][col] === 2) continue;
+
+      let blocked = false;
+      for (let i = 0; i < gridSize && !blocked; i++) {
+        if (i !== col && grid[row][i] === 2) blocked = true;
+        if (i !== row && grid[i][col] === 2) blocked = true;
+      }
+
+      if (!blocked) {
+        const region = regionMap[row][col];
+        for (let r = 0; r < gridSize && !blocked; r++) {
+          for (let c = 0; c < gridSize && !blocked; c++) {
+            if (r === row && c === col) continue;
+            if (grid[r][c] === 2) {
+              if (Math.abs(r - row) === 1 && Math.abs(c - col) === 1) blocked = true;
+              if (regionMap[r][c] === region) blocked = true;
             }
-            if (i !== col && grid[row][i] === 2) {
-                return true;
-            }
+          }
         }
+      }
 
-        // Check the adjacent diagonals and regions
-        const region = regionGrid[row][col];
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid.length; j++) {
-                if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
-                    return true;
-                }
-                if (!(i === row && j === col) && regionGrid[i][j] === region && grid[i][j] === 2) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+      if (blocked) dots.add(`${row},${col}`);
     }
+  }
 
-    for (let row = 0; row < grid.length; row++) {
-        for (let col = 0; col < grid.length; col++) {
-            if (grid[row][col] === 2) {
-                // Check for invalid placements
-                if (isInvalidPlacement(row, col, grid, regionGrid)) {
-                    invalid.push({row, col});
-                }
-            }
-        }
-    }
-    setInvalidCells(invalid);
+  return dots;
 }
 
-function checkAutoDots(grid: number[][], regionGrid: number[][], setAutoDots: (cells: {row: number, col: number}[]) => void) {
-    const autoDots: {row: number, col: number}[] = [];
+export default function QueensGrid({ initialGrid, regionMap, puzzleType, onAction, revealCell, hintCell }: Props) {
+  const pt = puzzleType;
+  const gridSize = pt.defaultSize.rows;
+  const cellSize = pt.cellSize;
 
-    function isInvalidPlacement(row: number, col: number, grid: number[][], regionGrid: number[][]): boolean {
-        // Check the column & row
-        for (let i = 0; i < grid.length; i++) {
-            if (i !== row && grid[i][col] === 2) {
-                return true;
-            }
-            if (i !== col && grid[row][i] === 2) {
-                return true;
-            }
-        }
+  const [grid, setGrid] = useState<number[][]>(initialGrid);
+  const [invalidCells, setInvalidCells] = useState<{ row: number; col: number }[]>([]);
+  const [relatedCells, setRelatedCells] = useState<{ row: number; col: number }[]>([]);
+  const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
+  const [solved, setSolved] = useState(false);
+  const [autoDots, setAutoDots] = useState<Set<string>>(new Set());
 
-        // Check the adjacent diagonals and regions
-        const region = regionGrid[row][col];
-        for (let i = 0; i <  grid.length; i++) {
-            for (let j = 0; j <  grid.length; j++) {
-                if (grid[i][j] === 2 && Math.abs(i - row) === 1 && Math.abs(j - col) === 1) {
-                    return true;
-                }
-                if (!(i === row && j === col) && regionGrid[i][j] === region && grid[i][j] === 2) {
-                    return true;
-                }
-            }
-        }
+  const gridRef = useRef(initialGrid);
+  const isDraggingRef = useRef(false);
+  const draggedCellsRef = useRef<{ row: number; col: number }[]>([]);
+  const startDragStateRef = useRef(0);
+  const autoDotsRef = useRef<Set<string>>(new Set());
 
-        return false;
+  const [, forceRender] = useState(0);
+
+  useEffect(() => {
+    gridRef.current = initialGrid;
+    setGrid(initialGrid);
+    autoDotsRef.current = new Set();
+    setAutoDots(new Set());
+    setSolved(false);
+    setInvalidCells([]);
+    setSelected(null);
+    setRelatedCells([]);
+  }, [initialGrid]);
+
+  const updateValidation = useCallback((newGrid: number[][]) => {
+    const result = pt.validate(newGrid, pt.defaultSize);
+    setInvalidCells([...result.invalidCells]);
+    setSolved(result.solved);
+    const dots = computeAutoDots(newGrid, regionMap, gridSize);
+    autoDotsRef.current = dots;
+    setAutoDots(dots);
+    return result;
+  }, [pt, regionMap, gridSize]);
+
+  const updateGrid = useCallback((newGrid: number[][]) => {
+    gridRef.current = newGrid;
+    setGrid(newGrid);
+  }, []);
+
+  const handleMouseDown = useCallback((row: number, col: number) => {
+    const currentGrid = gridRef.current;
+    const currentValue = currentGrid[row][col];
+    startDragStateRef.current = currentValue;
+    isDraggingRef.current = true;
+    draggedCellsRef.current = [{ row, col }];
+
+    const isAutoDot = currentValue === 0 && autoDotsRef.current.has(`${row},${col}`);
+
+    if (currentValue === 0 && !isAutoDot) {
+      const newGrid = currentGrid.map(r => [...r]);
+      newGrid[row][col] = 1;
+      updateGrid(newGrid);
+    } else if (currentValue !== 0) {
+      const newGrid = currentGrid.map(r => [...r]);
+      newGrid[row][col] = 0;
+      updateGrid(newGrid);
     }
 
-    for (let row = 0; row <  grid.length; row++) {
-        for (let col = 0; col <  grid.length; col++) {
-            if (grid[row][col] !== 2) {
-                // Check for invalid placements
-                if (isInvalidPlacement(row, col, grid, regionGrid)) {
-                    autoDots.push({row, col});
-                }
-            }
-        }
+    setSelected({ row, col });
+    setRelatedCells([...pt.getRelatedCells({ row, col }, pt.defaultSize)]);
+  }, [pt, updateGrid]);
+
+  const handleMouseEnter = useCallback((row: number, col: number) => {
+    if (!isDraggingRef.current) return;
+
+    const currentGrid = gridRef.current;
+    const startState = startDragStateRef.current;
+    const dragged = draggedCellsRef.current;
+
+    if (currentGrid[row][col] === 0 && startState === 0 && !autoDotsRef.current.has(`${row},${col}`)) {
+      if (!dragged.some(c => c.row === row && c.col === col)) {
+        const newGrid = currentGrid.map(r => [...r]);
+        newGrid[row][col] = 1;
+        updateGrid(newGrid);
+        draggedCellsRef.current = [...dragged, { row, col }];
+      }
+    } else if (currentGrid[row][col] === 1 && startState === 1) {
+      if (!dragged.some(c => c.row === row && c.col === col)) {
+        const newGrid = currentGrid.map(r => [...r]);
+        newGrid[row][col] = 0;
+        updateGrid(newGrid);
+        draggedCellsRef.current = [...dragged, { row, col }];
+      }
     }
-    setAutoDots(autoDots);
-}
+  }, [updateGrid]);
 
-export default function QueensGrid(props: Props) {
-    const [grid, setGrid] = useState<number[][]>(
-        props.grid
-    );
-    const [regionGrid, setRegionGrid] = useState<number[][]>(
-        props.regions
-    );
+  const handleMouseUp = useCallback(() => {
+    if (!isDraggingRef.current) return;
 
-    useEffect(() => {
-        setRegionGrid(props.regions);
-    }, [props.regions]);
+    const dragged = draggedCellsRef.current;
+    const startState = startDragStateRef.current;
+    const currentGrid = gridRef.current;
 
-    useEffect(() => {
-        setGrid(props.grid);
-        setAutoDots(Array<{row: number, col: number}>());
-        setSolved(false);
-    }, [props.grid]);
-    // Drag state
-    const [isDragging, setIsDragging] = useState(false);
-    const [draggedCells, setDraggedCells] = useState<{row: number, col: number}[]>([]);
-    const dragStarted = useRef(false);
-    const [startDragState, setStartDragState] = useState(0);
-    const [invalidCells, setInvalidCells] = useState<{row: number, col: number}[]>([]);
-    const [solved, setSolved] = useState(false);
-    const [autoDots, setAutoDots] = useState<{row: number, col: number}[]>([]);
+    let finalGrid = currentGrid.map(r => [...r]);
 
-    // Mouse event handlers
-    const handleSquareMouseDown = (row: number, col: number) => {
-        let currentDragState = grid[row][col];
-        setStartDragState(currentDragState);
-        setIsDragging(true);
-        setDraggedCells([{row, col}]);
-        dragStarted.current = true;
-        if (currentDragState === 0 && !autoDots.some(c => c.row === row && c.col === col)) {
-            setGrid(prevGrid => {
-                const newGrid = prevGrid.map(row => row.slice());
-                newGrid[row][col] = 1;
-                return newGrid;
-            });
-        } else {
-            setGrid(prevGrid => {
-                const newGrid = prevGrid.map(row => row.slice());
-                newGrid[row][col] = 0;
-                return newGrid;
-            });
-        }
-    };
+    if (dragged.length === 1 && startState === 1) {
+      const { row, col } = dragged[0];
+      finalGrid[row][col] = 2;
+      updateGrid(finalGrid);
 
-    const handleSquareMouseEnter = (row: number, col: number) => {
-        if (isDragging && grid[row][col] === 0 && startDragState === 0) {
-            setDraggedCells(prev => {
-                if (!prev.some(cell => cell.row === row && cell.col === col)) {
-                    // Update grid immediately
-                    setGrid(prevGrid => {
-                        const newGrid = prevGrid.map(rowArr => rowArr.slice());
-                        newGrid[row][col] = 1;
-                        return newGrid;
-                    });
-                    return [...prev, {row, col}];
-                }
-                return prev;
-            });
-        } else if (isDragging && grid[row][col] === 1 && startDragState === 1) {
-            setDraggedCells(prev => {
-                if (!prev.some(cell => cell.row === row && cell.col === col)) {
-                    // Update grid immediately
-                    setGrid(prevGrid => {
-                        const newGrid = prevGrid.map(rowArr => rowArr.slice());
-                        newGrid[row][col] = 0;
-                        return newGrid;
-                    });
-                    return [...prev, {row, col}];
-                }
-                return prev;
-            });
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-        if (draggedCells.length === 1 && startDragState === 1) {
-            setGrid(prevGrid => {
-                const newGrid = prevGrid.map(rowArr => rowArr.slice());
-                newGrid[draggedCells[0].row][draggedCells[0].col] = 2;
-                return newGrid;
-            });
-        }
-
-        setGrid(prevGrid => {
-            const newGrid = prevGrid.map(rowArr => rowArr.slice());
-            checkInvalidCells(newGrid, regionGrid, setInvalidCells);
-            checkAutoDots(newGrid, regionGrid, setAutoDots);
-            setSolved(invalidCells.length === 0 && newGrid.flat().filter(v => v === 2).length ===  grid.length);
-            return newGrid;
+      const result = updateValidation(finalGrid);
+      if (onAction) {
+        onAction({
+          type: 'place',
+          row,
+          col,
+          value: 2,
+          previousValue: 0,
+          errors: [...result.invalidCells],
+          gridSnapshot: finalGrid.map(r => [...r]),
         });
+      }
+    } else if (dragged.length === 1 && startState === 2) {
+      const { row, col } = dragged[0];
+      const result = updateValidation(finalGrid);
+      if (onAction) {
+        onAction({
+          type: 'delete',
+          row,
+          col,
+          value: 0,
+          previousValue: 2,
+          errors: [...result.invalidCells],
+          gridSnapshot: finalGrid.map(r => [...r]),
+        });
+      }
+    } else {
+      updateValidation(finalGrid);
+    }
 
-        setDraggedCells([]);
-        dragStarted.current = false;
-    };
+    isDraggingRef.current = false;
+    draggedCellsRef.current = [];
+    forceRender(c => c + 1);
+  }, [onAction, updateGrid, updateValidation]);
 
-    return (
-        <div
-            className="queens-grid"
-            style={{
-                display: 'grid',
-                gridTemplateRows: `repeat(${ grid.length}, 80px)`,
-                gridTemplateColumns: `repeat(${ grid.length}, 80px)`,
-                gap: 2,
-                background: solved ? '#3cff00ff' : '#000',
-                padding: 10,
-                width: grid.length * 82,
-            }}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={() => setIsDragging(false)}
-        >
-            {grid.map((row, rowIndex) =>
-                row.map((cell, colIndex) => (
-                    <QueensSquare
-                        key={`${rowIndex}-${colIndex}`}
-                        value={autoDots.some(c => c.row === rowIndex && c.col === colIndex) ? 1 : cell}
-                        region={regionGrid[rowIndex][colIndex]}
-                        onMouseDown={() => handleSquareMouseDown(rowIndex, colIndex)}
-                        onMouseEnter={() => handleSquareMouseEnter(rowIndex, colIndex)}
-                        invalid={invalidCells.some(c => c.row === rowIndex && c.col === colIndex)}
-                    />
-                ))
-            )}
-        </div>
-    );
+  const displayValue = (row: number, col: number): number => {
+    if (grid[row][col] !== 0) return grid[row][col];
+    if (autoDots.has(`${row},${col}`)) return 1;
+    return 0;
+  };
+
+  return (
+    <div
+      className="queens-grid-new"
+      style={{
+        display: 'grid',
+        gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`,
+        gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+        gap: 0,
+        background: solved ? '#3cff00ff' : '#fff',
+        padding: 0,
+        width: gridSize * cellSize,
+        userSelect: 'none',
+      }}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={() => {
+        if (isDraggingRef.current) {
+          handleMouseUp();
+        }
+      }}
+    >
+      {Array.from({ length: gridSize }, (_, row) =>
+        Array.from({ length: gridSize }, (_, col) => (
+          <QueensSquare
+            key={`${row}-${col}`}
+            value={displayValue(row, col)}
+            tile={pt.getTile(row, col, pt.defaultSize)}
+            isSelected={selected?.row === row && selected?.col === col}
+            related={relatedCells.some(c => c.row === row && c.col === col)}
+            invalid={invalidCells.some(c => c.row === row && c.col === col)}
+            reveal={revealCell?.row === row && revealCell?.col === col}
+            hint={hintCell?.row === row && hintCell?.col === col}
+            cellSize={cellSize}
+            onMouseDown={() => handleMouseDown(row, col)}
+            onMouseEnter={() => handleMouseEnter(row, col)}
+          />
+        ))
+      )}
+    </div>
+  );
 }

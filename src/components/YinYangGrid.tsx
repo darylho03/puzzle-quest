@@ -114,12 +114,12 @@ export default function YinYangGrid(props: Props) {
         <div className="yin-yang-grid"
             style={{
                 display: 'grid',
-                gridTemplateRows: `repeat(${grid.length}, 80px)`,
-                gridTemplateColumns: `repeat(${grid[0]?.length || 0}, 80px)`,
+                gridTemplateRows: `repeat(${grid.length}, 64px)`,
+                gridTemplateColumns: `repeat(${grid[0]?.length || 0}, 64px)`,
                 gap: 2,
                 background: solved ? '#3cff00ff' : '#000',
                 padding: 10,
-                width: grid[0].length * 82
+                width: grid[0].length * 66
             }}
         >
             {grid.map((row, rowIndex) => 

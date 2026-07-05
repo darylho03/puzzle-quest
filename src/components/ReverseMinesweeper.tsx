@@ -29,9 +29,10 @@ export default function ReverseMinesweeper() {
     const { user, setUser } = useUser();
     const [walls, setWalls] = useState<number[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0)));
     const [blocks, setBlocks] = useState<(number[][] | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
-    const [values, setValues] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
+    const [values, setValues] = useState<(number | "NaN" | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
     const [operations, setOperations] = useState<(string[][] | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
     const [blockTypes, setBlockTypes] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
+    const [blockPlanes, setBlockPlanes] = useState<(number | null)[][]>(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
     const [mode, setMode] = useState<string>('Normal');
 
     function handleOnClick(name: string) {
@@ -44,6 +45,7 @@ export default function ReverseMinesweeper() {
         const newValues: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(0));
         const newOperations: (string[][] | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(null));
         const newBlockTypes: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(null));
+        const newBlockPlanes: (number | null)[][] = Array(ROW).fill(null).map(() => Array(COL).fill(null));
 
         for (let i = 0; i < puzzle.walls.length; i++) {
             for (let j = 0; j < puzzle.walls[0].length; j++) {
@@ -52,6 +54,7 @@ export default function ReverseMinesweeper() {
                 newValues[i][j] = puzzle.values[i][j] === " " ? null : Number(puzzle.values[i][j]);
                 newOperations[i][j] = puzzle.operations ? parseOperationsInput(puzzle.blocks, puzzle.operations, i, j) : newBlocks[i][j] ? newBlocks[i][j].map((b) => b.map(() => '+')) : null;
                 newBlockTypes[i][j] = puzzle.block_types ? (puzzle.block_types[i][j] === " " ? (newBlocks[i][j] !== null ? 0 : null) : Number(puzzle.block_types[i][j])) : newBlocks[i][j] !== null ? 0 : null;
+                newBlockPlanes[i][j] = puzzle.block_planes ? (puzzle.block_planes[i][j] === " " ? (newBlocks[i][j] !== null ? 0 : null) : Number(puzzle.block_planes[i][j])) : newBlocks[i][j] !== null ? 0 : null;
             }
         }
         setWalls(newWalls);
@@ -59,6 +62,7 @@ export default function ReverseMinesweeper() {
         setValues(newValues);
         setOperations(newOperations);
         setBlockTypes(newBlockTypes);
+        setBlockPlanes(newBlockPlanes);
     }
 
     // Track signed-in user (assume passed in as prop or managed globally)
@@ -172,15 +176,14 @@ export default function ReverseMinesweeper() {
                     </button>
                 }
             </div>
-            <ReverseMinesweeperGrid 
-                level_id={selectedOption?.value}
-                user_id={user?.uid}
+            <ReverseMinesweeperGrid
                 mode={mode}
                 walls={walls}
                 blocks={blocks}
                 values={values}
                 operations={operations}
                 blockTypes={blockTypes}
+                blockPlanes={blockPlanes}
             />
         </div>
     )

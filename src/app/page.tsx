@@ -1,9 +1,5 @@
-import Sudoku from '../components/Sudoku';
+import PuzzleHome from '../components/PuzzleHome';
 
 export default function HomePage() {
-    return (
-        <div className="app">
-            <Sudoku />
-        </div>
-    );
+    return <PuzzleHome />;
 }

@@ -15,8 +15,8 @@ export default function YinYangSquare(props: Props) {
                 onRightClick();
             }}
             style={{
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
                 background: '#BDBDBD',
                 display: 'flex',
                 alignItems: 'center',

@@ -1,21 +1,40 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import ReverseMinesweeperSquare from './ReverseMinesweeperSquare';
-import { markLevelCompleted } from '../firebaseUser';
+
+export interface RMSnapshot {
+    walls: number[][];
+    blocks: (number[][] | null)[][];
+    values: (number | "NaN" | null)[][];
+    operations: (string[][] | null)[][];
+    blockTypes: (number | null)[][];
+    blockPlanes: (number | null)[][];
+}
+
+export interface RMAction {
+    type: 'swap' | 'wallbreak';
+    fromRow: number;
+    fromCol: number;
+    toRow: number;
+    toCol: number;
+    snapshot: RMSnapshot;
+    solved: boolean;
+}
 
 interface Props {
-    level_id?: string;
-    user_id?: string;
     mode?: string;
     walls: number[][];
     blocks: (number[][] | null)[][];
-    values: (number | null)[][];
+    values: (number | "NaN" | null)[][];
     operations: (string[][] | null)[][];
     blockTypes: (number | null)[][];
+    blockPlanes: (number | null)[][];
+    onAction?: (action: RMAction) => void;
+    onSolvedChange?: (solved: boolean) => void;
 }
 
-function initializeCorrectness(blocks: (number[][] | null)[][], values: (number | null)[][], operations: (string[][] | null)[][]): [number[][], number[][], (number[] | null)[][]] {
+function initializeCorrectness(blocks: (number[][] | null)[][], values: (number | "NaN" | null)[][], operations: (string[][] | null)[][]): [number[][], number[][], (number[] | null)[][]] {
     // console.log(`Initialize correctness`)
     let correct: number[][] = []
     let incorrect: number[][] = []
@@ -26,8 +45,9 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
         if (index === 9) {
             // console.log(`Checking cell (${i}, ${j}): found ${mines} mines, needs ${values[i][j]}`);
             if (values[i][j] === null) return;
-            currentValues[i][j].push(mines);
-            if (mines === values[i][j]) {
+
+            currentValues[i][j]?.push(mines);
+            if (String(mines) === String(values[i][j])) {
                 if (!correct.some(c => c[0] === i && c[1] === j)) {
                     correct.push([i, j]);
                 }
@@ -59,6 +79,7 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
                 let tempMines = mines;
                 blockCombo.forEach((b, idx) => {
                     const op = opCombos[comboIdx] && opCombos[comboIdx][idx] ? opCombos[comboIdx][idx] : '+';
+                    if (isNaN(b)) return;
                     if (op === 'x') tempMines *= b;
                     else if (op === '/') tempMines /= b;
                     else if (op === '+') tempMines += b;
@@ -114,6 +135,24 @@ function initializeCorrectness(blocks: (number[][] | null)[][], values: (number 
 let ROWS = 10;
 let COLS = 10;
 
+function deepCopySnapshot(
+    walls: number[][],
+    blocks: (number[][] | null)[][],
+    values: (number | "NaN" | null)[][],
+    operations: (string[][] | null)[][],
+    blockTypes: (number | null)[][],
+    blockPlanes: (number | null)[][],
+): RMSnapshot {
+    return {
+        walls: walls.map(r => [...r]),
+        blocks: blocks.map(r => r.map(b => b ? b.map(row => [...row]) : null)),
+        values: values.map(r => [...r] as (number | "NaN" | null)[]),
+        operations: operations.map(r => r.map(o => o ? o.map(row => [...row]) : null)),
+        blockTypes: blockTypes.map(r => [...r]),
+        blockPlanes: blockPlanes.map(r => [...r]),
+    };
+}
+
 export default function ReverseMinesweeperGrid(props: Props) {
     const [wallGrid, setWallGrid] = useState<number[][]>(
         props.walls
@@ -121,7 +160,7 @@ export default function ReverseMinesweeperGrid(props: Props) {
     const [blockGrid, setBlockGrid] = useState<(number[][] | null)[][]>(
         props.blocks
     );
-    const [valueGrid, setValueGrid] = useState<(number | null)[][]>(
+    const [valueGrid, setValueGrid] = useState<(number | "NaN" | null)[][]>(
         props.values
     );
     const [currentValues, setCurrentValues] = useState<(number[] | null)[][]>(
@@ -132,6 +171,9 @@ export default function ReverseMinesweeperGrid(props: Props) {
     );
     const [blockTypesGrid, setBlockTypesGrid] = useState<(number | null)[][]>(
         props.blockTypes
+    );
+    const [blockPlanesGrid, setBlockPlanesGrid] = useState<(number | null)[][]>(
+        props.blockPlanes
     );
     // Grid of coordinates [i, j] that are correct
     const [correctGrid, setCorrectGrid] = useState<(number[][])>(
@@ -149,7 +191,19 @@ export default function ReverseMinesweeperGrid(props: Props) {
         setCorrectGrid(newCorrectGrid);
         setIncorrectGrid(newIncorrectGrid);
         setCurrentValues(newCurrentValues);
+        let count = 0;
+        for (let i = 0; i < props.values.length; i++) {
+            for (let j = 0; j < props.values[0].length; j++) {
+                if (props.values[i][j] !== null) count++;
+            }
+        }
+        const isSolved = count > 0 && count === newCorrectGrid.length;
+        setSolved(isSolved);
     }, [props.blocks, props.values]);
+
+    useEffect(() => {
+        props.onSolvedChange?.(solved);
+    }, [solved, props.onSolvedChange]);
 
     useEffect(() => {
         setWallGrid(props.walls);
@@ -169,75 +223,79 @@ export default function ReverseMinesweeperGrid(props: Props) {
     useEffect(() => {
         setBlockTypesGrid(props.blockTypes);
     }, [props.blockTypes]);
+    useEffect(() => {
+        setBlockPlanesGrid(props.blockPlanes);
+    }, [props.blockPlanes]);
 
     function handleDragStart(idx: number[]) {
-        if (wallGrid[idx[0]][idx[1]] !== 1) {
+        if (blockGrid[idx[0]][idx[1]] !== null) {
             setDraggedIdx(idx);
         }
     }
 
-    async function handleDrop(idx: number[]) {
-        // console.log(`Handle drop: Starting idx: ${draggedIdx}, ending idx: ${idx}`)
-        if (draggedIdx === null || draggedIdx === idx || (wallGrid[idx[0]][idx[1]] > 0 && blockTypesGrid[draggedIdx[0]][draggedIdx[1]] !== wallGrid[idx[0]][idx[1]] * -1)) return;
+    function handleDrop(idx: number[]) {
+        if (draggedIdx === null || draggedIdx === idx || (valueGrid[idx[0]][idx[1]] !== null && blockGrid[idx[0]][idx[1]] === null && blockTypesGrid[draggedIdx[0]][draggedIdx[1]] === null) || (wallGrid[idx[0]][idx[1]] !== blockPlanesGrid[draggedIdx[0]][draggedIdx[1]] && (blockTypesGrid[draggedIdx[0]][draggedIdx[1]] === 0 || blockTypesGrid[draggedIdx[0]][draggedIdx[1]] !== wallGrid[idx[0]][idx[1]] * -1))) return;
         const newBlockGrid = [...blockGrid];
         const newValueGrid = [...valueGrid];
         const newWallGrid = [...wallGrid];
         const newOperationsGrid = [...operationsGrid];
         const newBlockTypesGrid = [...blockTypesGrid];
-        // console.log(newBlockGrid);
+        const newBlockPlanesGrid = [...blockPlanesGrid];
+
+        let isWallbreak = false;
 
         // Drag wallbreaker onto wall
         if (newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] < 0 && newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] * -1 === wallGrid[idx[0]][idx[1]]) {
-            console.log(`Breaking wall at: ${idx}`);
+            isWallbreak = true;
             newBlockGrid[idx[0]][idx[1]] = newBlockGrid[idx[0]][idx[1]] === null ? (newValueGrid[idx[0]][idx[1]] === null ? null : [[wallGrid[idx[0]][idx[1]] - 1]]) : newBlockGrid[idx[0]][idx[1]];
-            newWallGrid[idx[0]][idx[1]] = 0;
+            newWallGrid[idx[0]][idx[1]] = newBlockPlanesGrid[draggedIdx[0]][draggedIdx[1]];
             newBlockGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newValueGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newOperationsGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]] = null;
             newOperationsGrid[idx[0]][idx[1]] = newOperationsGrid[idx[0]][idx[1]] === null ? (newBlockGrid[idx[0]][idx[1]] === null ? null : newBlockGrid[idx[0]][idx[1]].map((b) => (b.map(() => '+')))) : newOperationsGrid[idx[0]][idx[1]];
             newBlockTypesGrid[idx[0]][idx[1]] = newBlockTypesGrid[idx[0]][idx[1]] === null ? (newBlockGrid[idx[0]][idx[1]] === null ? null : 0) : newBlockTypesGrid[idx[0]][idx[1]];
+            newBlockPlanesGrid[idx[0]][idx[1]] = newBlockPlanesGrid[draggedIdx[0]][draggedIdx[1]];
         } else {
-            // Normal swapping behavior onto empty space
-            // console.log(`Swapping cells: ${draggedIdx} and ${idx}`);
             [newBlockGrid[draggedIdx[0]][draggedIdx[1]], newBlockGrid[idx[0]][idx[1]]] = [newBlockGrid[idx[0]][idx[1]], newBlockGrid[draggedIdx[0]][draggedIdx[1]]];
             [newValueGrid[draggedIdx[0]][draggedIdx[1]], newValueGrid[idx[0]][idx[1]]] = [newValueGrid[idx[0]][idx[1]], newValueGrid[draggedIdx[0]][draggedIdx[1]]];
             [newWallGrid[draggedIdx[0]][draggedIdx[1]], newWallGrid[idx[0]][idx[1]]] = [newWallGrid[idx[0]][idx[1]], newWallGrid[draggedIdx[0]][draggedIdx[1]]];
             [newOperationsGrid[draggedIdx[0]][draggedIdx[1]], newOperationsGrid[idx[0]][idx[1]]] = [newOperationsGrid[idx[0]][idx[1]], newOperationsGrid[draggedIdx[0]][draggedIdx[1]]];
             [newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]], newBlockTypesGrid[idx[0]][idx[1]]] = [newBlockTypesGrid[idx[0]][idx[1]], newBlockTypesGrid[draggedIdx[0]][draggedIdx[1]]];
+            [newBlockPlanesGrid[draggedIdx[0]][draggedIdx[1]], newBlockPlanesGrid[idx[0]][idx[1]]] = [newBlockPlanesGrid[idx[0]][idx[1]], newBlockPlanesGrid[draggedIdx[0]][draggedIdx[1]]];
         }
         setBlockGrid(newBlockGrid);
         setValueGrid(newValueGrid);
         setWallGrid(newWallGrid);
         setOperationsGrid(newOperationsGrid);
         setBlockTypesGrid(newBlockTypesGrid);
-        // Recalculate correctness
+        setBlockPlanesGrid(newBlockPlanesGrid);
         const [newCorrectGrid, newIncorrectGrid, newCurrentValues] = initializeCorrectness(newBlockGrid, newValueGrid, newOperationsGrid);
         setCorrectGrid(newCorrectGrid);
         setIncorrectGrid(newIncorrectGrid);
         setCurrentValues(newCurrentValues);
-        console.log(newCurrentValues);
 
         let count = 0;
         for (let i = 0; i < newValueGrid.length; i++) {
             for (let j = 0; j < newValueGrid[0].length; j++) {
-                if (newValueGrid[i][j] !== null) {
-                    count++;
-                }
+                if (newValueGrid[i][j] !== null) count++;
             }
         }
-        // console.log(newValueGrid.filter(val => val !== null));
-        // console.log(count, newCorrectGrid.length);
         const solvedNow = count === newCorrectGrid.length;
         setSolved(solvedNow);
         setDraggedIdx(null);
-        // Mark level as complete in Firebase if solved
-        if (solvedNow && props.user_id && props.level_id) {
-            await markLevelCompleted(props.user_id, props.level_id);
+
+        if (props.onAction) {
+            props.onAction({
+                type: isWallbreak ? 'wallbreak' : 'swap',
+                fromRow: draggedIdx[0],
+                fromCol: draggedIdx[1],
+                toRow: idx[0],
+                toCol: idx[1],
+                snapshot: deepCopySnapshot(newWallGrid, newBlockGrid, newValueGrid, newOperationsGrid, newBlockTypesGrid, newBlockPlanesGrid),
+                solved: solvedNow,
+            });
         }
-        // console.log(newBlockGrid);
-        // console.log(newValueGrid);
-        console.log(newIncorrectGrid);
     }
 
     return (
@@ -245,12 +303,12 @@ export default function ReverseMinesweeperGrid(props: Props) {
             className="reverse-minesweeper-grid"
             style={{
                 display: 'grid',
-                gridTemplateRows: `repeat(${ROWS}, 80px)`,
-                gridTemplateColumns: `repeat(${COLS}, 80px)`,
+                gridTemplateRows: `repeat(${ROWS}, 64px)`,
+                gridTemplateColumns: `repeat(${COLS}, 64px)`,
                 gap: 2,
                 background: solved ? '#3cff00ff' : '#000',
                 padding: 10,
-                width: COLS * 82
+                width: COLS * 66
             }}
         >
             {wallGrid.map((row, rowIndex) =>
@@ -264,10 +322,11 @@ export default function ReverseMinesweeperGrid(props: Props) {
                         currentValue={currentValues[rowIndex][colIndex]}
                         operation={operationsGrid[rowIndex][colIndex]}
                         blockType={blockTypesGrid[rowIndex][colIndex]}
+                        blockPlane={blockPlanesGrid[rowIndex][colIndex]}
                         onDragStart={() => handleDragStart([rowIndex, colIndex])}
                         onDrop={() => handleDrop([rowIndex, colIndex])}
                         onDragOver={e => e.preventDefault()}
-                        draggable={cell <= 0}
+                        draggable={cell === blockPlanesGrid[rowIndex][colIndex]}
                         correct={correctGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
                         incorrect={incorrectGrid.some(c => c[0] === rowIndex && c[1] === colIndex)}
                         hidden={false}

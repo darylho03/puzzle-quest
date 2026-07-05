@@ -18,7 +18,7 @@ const PUZZLE_TABS = [
     dropdown: [
       { label: 'Classic Sudoku', to: '/sudoku', img: '/sudoku.png', hover_img: '/sudoku-solved.png' },
       { label: 'Queens', to: '/queens', img: '/queens.png', hover_img: '/queens-solved.png' },
-      { label: 'Range (Kuromasu)', to: '/range', img: '/range.png', hover_img: '/range-solved.png' },
+      { label: 'Kurodoku', to: '/kurodoku', img: '/range.png', hover_img: '/range-solved.png' },
       { label: 'Area (Nurikabe) [Unfinished]', to: '/area', img: '/area.png', hover_img: '/area-solved.png' },
       { label: 'Yin-Yang', to: '/yin-yang', img: '/yin-yang.png', hover_img: '/yin-yang-solved.png' },
     ],

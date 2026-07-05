@@ -40,10 +40,11 @@ interface Props {
     mode?: string;
     wall: number;
     block: number[][] | null;
-    value: number | null;
-    currentValue: number[] | null;
+    value: number | "NaN" | null;
+    currentValue: (number | "NaN")[] | null;
     operation: string[][] | null;
     blockType: number | null;
+    blockPlane: number | null;
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
     onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
     onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -54,7 +55,7 @@ interface Props {
 }
 
 export default function ReverseMinesweeperSquare(props: Props) {
-    const { mode, wall, block, value, currentValue, operation, blockType, onDragStart, onDrop, onDragOver, draggable, incorrect, correct, hidden } = props;
+    const { mode, wall, block, value, currentValue, operation, blockType, blockPlane, onDragStart, onDrop, onDragOver, draggable, incorrect, correct, hidden } = props;
     const [popup, setPopup] = useState<{ x: number, y: number } | null>(null);
     const popupRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +67,13 @@ export default function ReverseMinesweeperSquare(props: Props) {
     function handleClosePopup() {
         setPopup(null);
     }
+
+    useEffect(() => {
+        for (const val of currentValue || []) {
+            // cast each to string
+            String(val);
+        }
+    }, [currentValue])
 
     useEffect(() => {
         if (!popup) return;
@@ -90,8 +98,8 @@ export default function ReverseMinesweeperSquare(props: Props) {
             onDrop={onDrop}
             onContextMenu={handleContextMenu}
             style={{
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
                 fontSize: 40,
                 position: 'relative',
                 backgroundColor: wall ? wallColors[wall] : '#BDBDBD',
@@ -173,6 +181,23 @@ export default function ReverseMinesweeperSquare(props: Props) {
                             ))}
                         </div>
                     ))}
+                    {/* Overlay the block plane color as a small square with black border, centered at the bottom */}
+                    {blockPlane !== null && blockPlane !== 0 && (
+                        <div
+                            className="reverse-minesweeper-block-plane-indicator"
+                            style={{
+                                position: 'absolute',
+                                bottom: 2,
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                width: 8,
+                                height: 8,
+                                backgroundColor: wallColors[String(blockPlane)],
+                                border: '1px solid black',
+                                boxSizing: 'border-box',
+                            }}
+                        ></div>
+                    )}
                     {/* Overlay the value, centered */}
                     {(
                         <span
@@ -222,9 +247,9 @@ export default function ReverseMinesweeperSquare(props: Props) {
                         position: 'absolute',
                         top: '50%',
                         left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 80,
-                        height: 80,
+                        transform: 'translate(-48%, -48%)',
+                        width: 64,
+                        height: 64,
                         borderRadius: 20,
                         overflow: 'hidden',
                         pointerEvents: 'none',
@@ -232,7 +257,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     }}
                     draggable={draggable}
                 >
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="f1dd9480">
                         <path id="c975e88e" d="M28.9111 12.8369H10.748L19.8291 3.3916L28.9111 12.8369Z" fill={wallColors[-blockType]} stroke="black"></path>
                         <path id="891badfd" d="M49.5137 11.4922H31.1709L40.3418 0.761719L49.5137 11.4922Z" fill={wallColors[-blockType]} stroke="black"></path>
@@ -250,15 +275,18 @@ export default function ReverseMinesweeperSquare(props: Props) {
                         <rect id="52645a94" x="10.0732" y="11.1582" width="60.5385" height="59" rx="3.5" fill={wallColors[-blockType]} stroke="black"></rect>
                         </g>
                     </g>
+                    </svg> */}
+                    <svg width="78" height="78" viewBox="0 0 78 78" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path id="2ac6c00e" d="M10 26.5859L3.41406 20L10 13.4141V10H13.4141L20 3.41406L26.5859 10H30.4141L39 1.41406L47.5859 10H51.4141L58 3.41406L64.5859 10H68V13.4141L74.5859 20L68 26.5859V30.4141L76.5859 39L68 47.5859V51.4141L74.5859 58L68 64.5859V68H64.5859L58 74.5859L51.4141 68H47.5859L39 76.5859L30.4141 68H26.5859L20 74.5859L13.4141 68H10V64.5859L3.41406 58L10 51.4141V47.5859L1.41406 39L10 30.4141V26.5859Z" fill={wallColors[-blockType]} stroke="black" strokeWidth="2"></path>
                     </svg>
                     <div
                         style={{
                             position: 'absolute',
                             top: '50%',
                             left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: '55px',
-                            height: '55px',
+                            transform: 'translate(-52%, -52%)',
+                            width: '50px',
+                            height: '50px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -347,7 +375,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         color: (incorrect ? 'red' : (correct ? '#3cff00' : 'black')),
-                        fontSize: (value < 99 ? 32 : (value < 999 ? 28 : 24)),
+                        fontSize: (value !== "NaN" && value < 99 ? 32 : (value !== "NaN" && value < 999 ? 28 : 24)),
                         fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
                     }}
                 >
@@ -362,14 +390,23 @@ export default function ReverseMinesweeperSquare(props: Props) {
                         bottom: 2,
                         right: 2,
                         fontSize: 14,
-                        color: '#8a3333',
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        color: '#3cff00',
+                        backgroundColor: 'black',
+                        padding: '1px 2px',
+                        borderRadius: 4,
                         pointerEvents: 'none',
                         fontFamily: 'monospace',
                     }}
                 >
                     {/* Show the correct value if it is correct, otherwise show the current value closest to value*/}
-                    {correct ? value : currentValue.sort((a, b) => Math.abs(a - (value || 0)) - Math.abs(b - (value || 0)))[0]}
+                    {correct ? value : currentValue.sort((a, b) => {
+                        // Put 'NaN' strings before any numbers
+                        if (a === "NaN" && b === "NaN") return 0;
+                        if (a === "NaN") return -1;
+                        if (b === "NaN") return 1;
+                        const ref = (value !== "NaN" ? value as number : 0);
+                        return Math.abs((a as number) - ref) - Math.abs((b as number) - ref);
+                    })[0]}
                 </div>
             )}
             {/* Popup for block info */}
@@ -391,6 +428,7 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     onClick={handleClosePopup}
                 >
                     {wall > 0 && <><span>Wall {wall > 1 ? wall - 1 : ''}</span><br /></>}
+                    {blockPlane !== null && blockPlane > 0 && <><span>Plane: {blockPlane - 1}</span><br /></>}
                     {blockType < 0 && <><span>Wallbreaker {blockType < -1 ? blockType * -1 - 1 : ''}</span><br /></>}
                     {block && (
                         <span>
@@ -415,10 +453,16 @@ export default function ReverseMinesweeperSquare(props: Props) {
                     {currentValue !== null && (
                         <span>
                             Current: {
-                                currentValue.sort((a, b) => a - b).map((cv, idx) => (
+                                // sort a copy so we don't mutate the original array
+                                currentValue.slice().sort((a, b) => {
+                                    if (a === "NaN" && b === "NaN") return 0;
+                                    if (a === "NaN") return -1; // put NaN first
+                                    if (b === "NaN") return 1;
+                                    return (a as number) - (b as number);
+                                }).map((cv, idx, arr) => (
                                     <span key={`current-${idx}`}>
                                         {`${cv}`}
-                                        {idx < currentValue.length - 1 ? ' or ' : ''}
+                                        {idx < arr.length - 1 ? ' or ' : ''}
                                     </span>
                                 ))
                             }

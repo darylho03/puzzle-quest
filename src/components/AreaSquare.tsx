@@ -11,8 +11,8 @@ export default function AreaSquare(props: Props) {
         <div
             className={`square area-square area-color-${square}`}
             style={{
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
                 fontSize: 40,
                 display: 'flex',
                 alignItems: 'center',
